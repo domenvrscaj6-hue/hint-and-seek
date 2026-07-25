@@ -1,0 +1,8 @@
+{
+  "name": "hint-and-seek",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Gift hints without spoiling the surprise — wishes in, gentle hints out.",
+  "engines": { "node": ">=18" }
+}

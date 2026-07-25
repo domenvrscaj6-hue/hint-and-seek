@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hint &amp; Seek — gift hints, the old-fashioned way</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#f3ead7;
+    --paper-edge:#e6d9bd;
+    --ink:#3a2c1c;
+    --ink-soft:#5c4a33;
+    --pencil:#8b8070;
+    --seal:#a4443a;
+    --seal-dark:#7e332b;
+    --rule:#d8c9a8;
+    --desk:#2e2318;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    min-height:100vh;
+    font-family:'EB Garamond', Georgia, 'Times New Roman', serif;
+    color:var(--ink);
+    background:
+      radial-gradient(ellipse at 50% -10%, #4a3a27 0%, var(--desk) 62%),
+      var(--desk);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:40px 16px 64px;
+  }
+  /* ---------- paper sheet ---------- */
+  .sheet{
+    position:relative;
+    width:100%;
+    max-width:660px;
+    background:var(--paper);
+    border-radius:3px 5px 4px 6px;
+    box-shadow:
+      0 1px 2px rgba(0,0,0,.35),
+      0 12px 34px rgba(0,0,0,.45),
+      inset 0 0 90px rgba(120,90,40,.14);
+    padding:44px 46px 52px;
+    transform:rotate(-.35deg);
+  }
+  .sheet::before{ /* paper grain */
+    content:"";
+    position:absolute; inset:0;
+    border-radius:inherit;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+    pointer-events:none;
+  }
+  .sheet > *{position:relative}
+  @media (max-width:560px){
+    .sheet{padding:34px 22px 42px;transform:none}
+  }
+
+  /* ---------- typography ---------- */
+  h1,h2,.hand{font-family:'Caveat', cursive;color:var(--ink)}
+  h1{font-size:56px;font-weight:700;line-height:1;text-align:center}
+  h2{font-size:38px;font-weight:700;line-height:1.1;margin-bottom:4px}
+  h3.section-title{font-family:'Caveat',cursive;font-size:27px;font-weight:700;color:var(--seal);margin:26px 0 2px}
+  .tagline{
+    text-align:center;font-style:italic;color:var(--ink-soft);
+    font-size:18px;margin-top:10px;
+  }
+  .underline-squiggle{display:block;margin:6px auto 0;width:210px}
+  .lead{font-size:17.5px;line-height:1.55;color:var(--ink-soft)}
+
+  label{
+    display:block;
+    font-size:14px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    font-weight:600;
+    color:var(--ink);
+    margin-bottom:2px;
+  }
+  .hint-text{
+    font-size:13.5px;
+    font-style:italic;
+    color:var(--pencil);
+    line-height:1.45;
+    margin-bottom:8px;
+  }
+  .field{margin-top:26px}
+
+  /* ---------- inputs ---------- */
+  input[type=text], input[type=email], select, textarea{
+    width:100%;
+    background:transparent;
+    border:none;
+    border-bottom:1.5px solid var(--rule);
+    font-family:'Caveat', cursive;
+    font-size:22px;
+    color:var(--ink);
+    padding:4px 2px 6px;
+    border-radius:0;
+  }
+  select{
+    font-family:'EB Garamond', serif;
+    font-size:17px;
+    padding:6px 2px;
+    cursor:pointer;
+    appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9'%3E%3Cpath d='M1 1l6 6 6-6' fill='none' stroke='%235c4a33' stroke-width='1.6'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;
+    background-position:right 4px center;
+  }
+  input:focus, select:focus, textarea:focus, button:focus-visible, .tab:focus-visible{
+    outline:2px dashed var(--seal);
+    outline-offset:3px;
+  }
+  ::placeholder{color:#b3a488;opacity:1}
+
+  /* ruled-paper textarea — the signature element */
+  textarea{
+    --line:32px;
+    border:1px solid var(--rule);
+    border-radius:2px;
+    background:
+      repeating-linear-gradient(
+        to bottom,
+        transparent 0,
+        transparent calc(var(--line) - 1px),
+        var(--rule) calc(var(--line) - 1px),
+        var(--rule) var(--line)
+      );
+    background-attachment:local;
+    line-height:var(--line);
+    font-size:21px;
+    padding:0 12px;
+    min-height:calc(var(--line) * 5 + 2px);
+    resize:vertical;
+  }
+  textarea.small{min-height:calc(var(--line) * 3 + 2px)}
+
+  /* ---------- email chips ---------- */
+  .chips{
+    display:flex;flex-wrap:wrap;gap:8px;align-items:center;
+    border-bottom:1.5px solid var(--rule);
+    padding:4px 0 8px;
+  }
+  .chip{
+    display:inline-flex;align-items:center;gap:7px;
+    background:#eadfc4;
+    border:1px solid var(--rule);
+    border-radius:2px 4px 3px 5px;
+    padding:3px 9px;
+    font-size:15px;
+    color:var(--ink-soft);
+    box-shadow:0 1px 1px rgba(0,0,0,.08);
+  }
+  .chip button{
+    border:none;background:none;cursor:pointer;
+    font-family:inherit;font-size:15px;color:var(--seal);line-height:1;padding:0 2px;
+  }
+  .chips input{border:none;flex:1;min-width:180px}
+  .chips.shake{animation:shake .3s}
+  @keyframes shake{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+
+  /* ---------- tabs ---------- */
+  .tabs{display:flex;gap:6px;margin-top:14px}
+  .tab{
+    font-family:'Caveat', cursive;
+    font-size:21px;font-weight:700;
+    color:var(--ink-soft);
+    background:#e7dabb;
+    border:1px solid var(--rule);
+    border-bottom:none;
+    border-radius:8px 8px 0 0;
+    padding:6px 20px 4px;
+    cursor:pointer;
+    transform:translateY(1px);
+  }
+  .tab[aria-selected=true]{
+    background:var(--paper);
+    color:var(--seal);
+    box-shadow:0 -2px 3px rgba(0,0,0,.05);
+  }
+  .tab .count{font-size:14px;font-family:'EB Garamond',serif;font-weight:400;color:var(--pencil)}
+
+  /* ---------- preview hint rows ---------- */
+  .hint-row{display:flex;gap:8px;align-items:center;margin-top:4px}
+  .hint-row input{font-size:20px;flex:1}
+  .del-hint{
+    border:none;background:none;cursor:pointer;
+    color:var(--seal);font-size:17px;line-height:1;padding:4px;
+  }
+  .add-hint{
+    background:none;border:none;cursor:pointer;
+    font-family:'EB Garamond',serif;font-size:14.5px;font-style:italic;
+    color:var(--pencil);text-decoration:underline;text-underline-offset:3px;
+    margin-top:8px;padding:0;
+  }
+
+  /* ---------- buttons ---------- */
+  .stamp-btn{
+    display:inline-block;
+    font-family:'Caveat', cursive;
+    font-size:26px;font-weight:700;
+    color:#fdf6e6;
+    background:var(--seal);
+    border:none;
+    border-radius:4px 7px 5px 8px;
+    padding:10px 38px 12px;
+    cursor:pointer;
+    box-shadow:0 3px 0 var(--seal-dark), 0 6px 14px rgba(0,0,0,.28);
+    transition:transform .08s ease, box-shadow .08s ease;
+  }
+  .stamp-btn:hover{transform:translateY(-1px)}
+  .stamp-btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--seal-dark)}
+  .stamp-btn[disabled]{opacity:.55;cursor:wait;transform:none}
+  .btn-row{margin-top:36px;text-align:center}
+
+  .link-btn{
+    background:none;border:none;cursor:pointer;
+    font-family:'EB Garamond', serif;font-size:16px;font-style:italic;
+    color:var(--ink-soft);text-decoration:underline;text-underline-offset:3px;
+  }
+  .back-row{margin-bottom:18px}
+
+  /* ---------- landing choice cards ---------- */
+  .choices{display:flex;gap:26px;margin-top:38px;justify-content:center;flex-wrap:wrap}
+  .choice{
+    flex:1;min-width:230px;max-width:275px;
+    background:#efe4c9;
+    border:1px solid var(--rule);
+    border-radius:3px 6px 4px 7px;
+    box-shadow:0 2px 3px rgba(0,0,0,.15), 0 10px 20px rgba(0,0,0,.12);
+    padding:26px 24px 28px;
+    cursor:pointer;text-align:left;
+    font-family:inherit;color:var(--ink);
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .choice:nth-child(1){transform:rotate(-1.1deg)}
+  .choice:nth-child(2){transform:rotate(1deg)}
+  .choice:hover{transform:rotate(0) translateY(-4px);box-shadow:0 4px 6px rgba(0,0,0,.18), 0 16px 28px rgba(0,0,0,.2)}
+  .choice .hand{font-size:30px;font-weight:700;color:var(--seal)}
+  .choice p{font-size:15.5px;line-height:1.5;color:var(--ink-soft);margin-top:8px}
+  .choice .emoji{font-size:26px}
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none!important;transition:none!important}
+  }
+
+  /* ---------- notices ---------- */
+  .notice{
+    margin-top:22px;
+    border:1px dashed var(--seal);
+    border-radius:3px;
+    padding:14px 16px;
+    font-size:15.5px;line-height:1.5;color:var(--ink-soft);
+    background:rgba(164,68,58,.06);
+  }
+  .notice.error{border-style:solid}
+  .hidden{display:none!important}
+
+  /* ---------- success ---------- */
+  .success{text-align:center;padding:22px 0 8px}
+  .postmark{
+    width:120px;height:120px;margin:0 auto 18px;
+    border:2.5px dashed var(--seal);
+    border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    flex-direction:column;gap:2px;
+    color:var(--seal);
+    transform:rotate(-8deg);
+    font-family:'Caveat',cursive;font-weight:700;font-size:24px;
+  }
+  .postmark small{font-family:'EB Garamond',serif;font-size:11px;letter-spacing:.18em;text-transform:uppercase}
+
+  footer{
+    margin-top:26px;color:#c9b896;font-size:13.5px;font-style:italic;
+    text-align:center;line-height:1.6;max-width:520px;
+  }
+  footer a{color:inherit}
+</style>
+</head>
+<body>
+
+<main class="sheet" id="sheet">
+
+  <!-- ============ VIEW: LANDING ============ -->
+  <section id="view-landing">
+    <h1>Hint &amp; Seek</h1>
+    <svg class="underline-squiggle" viewBox="0 0 210 12" fill="none" aria-hidden="true">
+      <path d="M3 8 C 40 2, 75 11, 106 6 S 175 3, 207 7" stroke="#a4443a" stroke-width="2.4" stroke-linecap="round"/>
+    </svg>
+    <p class="tagline">Better gifts, without spoiling the surprise.</p>
+
+    <div class="choices">
+      <button class="choice" id="btn-give" type="button">
+        <span class="emoji" aria-hidden="true">✍️</span>
+        <div class="hand">Give a hint</div>
+        <p>Write down what you truly need, want and like. We turn it into gentle hints and mail them to the people you choose.</p>
+      </button>
+      <button class="choice" id="btn-get" type="button">
+        <span class="emoji" aria-hidden="true">🔍</span>
+        <div class="hand">Get a hint</div>
+        <p>Buying a gift for someone and out of ideas? We'll kindly ask them for hints on your behalf — the surprise stays safe.</p>
+      </button>
+    </div>
+  </section>
+
+  <!-- ============ VIEW: GIVE A HINT (step 1: wishes) ============ -->
+  <section id="view-give" class="hidden">
+    <div class="back-row"><button class="link-btn js-back" type="button">← back</button></div>
+    <h2>Give a hint</h2>
+    <p class="lead">Fill this in like a letter. Nobody will see your exact words — they'll receive warm, anonymous-feeling hints, and you'll get to check them first.</p>
+
+    <form id="form-give" novalidate>
+      <!-- honeypot (bots fill it, humans never see it) -->
+      <input type="text" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-5000px" aria-hidden="true">
+
+      <div class="field">
+        <label for="give-name">Your name</label>
+        <p class="hint-text">First and last name — so people know who these hints are from.</p>
+        <input type="text" id="give-name" autocomplete="name" maxlength="80" required>
+      </div>
+
+      <div class="field">
+        <label for="give-sender-email">Your email</label>
+        <p class="hint-text">We'll send you a confirmation link — nothing goes out to anyone until you click it.</p>
+        <input type="email" id="give-sender-email" autocomplete="email" inputmode="email" required>
+      </div>
+
+      <div class="field">
+        <label for="give-emails">Send hints to</label>
+        <p class="hint-text">Type an email and press Enter — add as many people as you like (up to 20).</p>
+        <div class="chips" id="chips">
+          <input type="email" id="give-emails" placeholder="name@example.com" inputmode="email">
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="give-occasion">Occasion</label>
+        <p class="hint-text">Sets the look and the tone of the email your people receive.</p>
+        <select id="give-occasion">
+          <option value="christmas">Christmas</option>
+          <option value="birthday">Birthday</option>
+          <option value="other">Other occasion</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label id="wishes-label">Your wishes</label>
+        <p class="hint-text">Write freely, one wish per line. Recipients never see this text — it is transformed into hints, and you'll review every hint before sending. All three sections are required.</p>
+        <div class="tabs" role="tablist" aria-labelledby="wishes-label">
+          <button class="tab" type="button" role="tab" data-section="needs" aria-selected="true">Needs <span class="count"></span></button>
+          <button class="tab" type="button" role="tab" data-section="wants" aria-selected="false">Wants <span class="count"></span></button>
+          <button class="tab" type="button" role="tab" data-section="likes" aria-selected="false">Likes <span class="count"></span></button>
+        </div>
+        <textarea id="wishes" aria-label="Wishes for the selected section" placeholder="e.g. new running socks…"></textarea>
+        <p class="hint-text" id="section-desc" style="margin-top:6px"></p>
+      </div>
+
+      <div class="field">
+        <label for="give-notes">Special notes</label>
+        <p class="hint-text">Optional — the only part that may stay empty. Added to the email word-for-word, as a personal note at the end; this part is <em>not</em> masked.</p>
+        <textarea id="give-notes" class="small" placeholder="e.g. Please, no scented candles this year 🙂"></textarea>
+      </div>
+
+      <div class="notice error hidden" id="give-error"></div>
+
+      <div class="btn-row">
+        <button class="stamp-btn" id="give-preview-btn" type="submit">Preview the hints</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- ============ VIEW: GIVE A HINT (step 2: preview) ============ -->
+  <section id="view-preview" class="hidden">
+    <div class="back-row"><button class="link-btn" id="preview-back" type="button">← edit wishes</button></div>
+    <h2>Check the hints</h2>
+    <p class="lead">This is exactly what your people will receive — your original words stay private. Edit or remove any hint; every section needs at least one.</p>
+
+    <div id="preview-sections"></div>
+
+    <div class="notice hidden" id="preview-note"></div>
+    <div class="notice error hidden" id="preview-error"></div>
+
+    <div class="btn-row">
+      <button class="stamp-btn" id="preview-send" type="button">Send the hints</button>
+    </div>
+  </section>
+
+  <!-- ============ VIEW: GET A HINT ============ -->
+  <section id="view-get" class="hidden">
+    <div class="back-row"><button class="link-btn js-back" type="button">← back</button></div>
+    <h2>Get a hint</h2>
+    <p class="lead">Tell us who you're shopping for. We'll send them a short, friendly note asking for a few gift hints — they share directions, not exact wishes, so your gift stays a surprise for both of you.</p>
+
+    <form id="form-get" novalidate>
+      <input type="text" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-5000px" aria-hidden="true">
+
+      <div class="field">
+        <label for="get-name">Your name</label>
+        <p class="hint-text">First and last name — so they know who's asking.</p>
+        <input type="text" id="get-name" autocomplete="name" maxlength="80" required>
+      </div>
+
+      <div class="field">
+        <label for="get-email">Their email</label>
+        <p class="hint-text">The person you'd love some hints from.</p>
+        <input type="email" id="get-email" placeholder="name@example.com" inputmode="email" required>
+      </div>
+
+      <div class="field">
+        <label for="get-occasion">Occasion</label>
+        <p class="hint-text">So we can ask them nicely and in the right spirit.</p>
+        <select id="get-occasion">
+          <option value="christmas">Christmas</option>
+          <option value="birthday">Birthday</option>
+          <option value="other">Other occasion</option>
+        </select>
+      </div>
+
+      <div class="notice error hidden" id="get-error"></div>
+
+      <div class="btn-row">
+        <button class="stamp-btn" id="get-send" type="submit">Ask for hints</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- ============ VIEW: SUCCESS ============ -->
+  <section id="view-success" class="hidden">
+    <div class="success">
+      <div class="postmark"><span id="postmark-word">Sent!</span><small>Hint &amp; Seek</small></div>
+      <h2 id="success-title" style="text-align:center">Off it goes ✉️</h2>
+      <p class="lead" id="success-text" style="margin-top:10px"></p>
+      <div class="btn-row">
+        <button class="stamp-btn js-back" type="button">Back to start</button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  Hint &amp; Seek never shows your exact wishes to gift-givers. Recipient emails are used only for delivery,
+  and every email includes a one-click way to opt out of future notes.
+</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- state ---------- */
+  var sections = { needs:"", wants:"", likes:"" };
+  var activeSection = "needs";
+  var emails = [];
+  var MAX_EMAILS = 20;
+  var previewIsDemo = false;
+
+  var SECTION_TITLES = { needs:"Needs", wants:"Wants", likes:"Likes" };
+  var sectionDesc = {
+    needs: "Practical things you actually need. Shared as practical, brand-free hints.",
+    wants: "Things you'd love to get. Shared as a type of gift — never the exact product.",
+    likes: "Interests, hobbies, favourite things. Shared as gentle directions to explore."
+  };
+
+  /* ---------- fun rotating placeholders (all safely fictional or historical) ---------- */
+  var GIVE_IDENTITIES = [
+    ["Santa Claus", "santa@northpole.com"],
+    ["William Shakespeare", "will@globetheatre.co"],
+    ["Marie Curie", "marie@radiantmail.fr"],
+    ["Cleopatra", "cleo@nileside.eg"],
+    ["Ludwig van Beethoven", "ludwig@moonlightsonata.at"]
+  ];
+  var GET_NAMES = ["Sherlock Holmes", "Robin Hood", "Leonardo da Vinci", "Jane Austen", "Nikola Tesla"];
+
+  var giveId = GIVE_IDENTITIES[Math.floor(Math.random() * GIVE_IDENTITIES.length)];
+  document.getElementById("give-name").placeholder = "e.g. " + giveId[0];
+  document.getElementById("give-sender-email").placeholder = "e.g. " + giveId[1];
+  document.getElementById("get-name").placeholder =
+    "e.g. " + GET_NAMES[Math.floor(Math.random() * GET_NAMES.length)];
+
+  /* ---------- helpers ---------- */
+  function $(id){ return document.getElementById(id); }
+  function show(viewId){
+    ["view-landing","view-give","view-preview","view-get","view-success"].forEach(function(v){
+      $(v).classList.toggle("hidden", v !== viewId);
+    });
+    window.scrollTo({top:0, behavior:"smooth"});
+  }
+  function isEmail(s){ return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(s); }
+  function setError(id, msg){
+    var el = $(id);
+    if(!msg){ el.classList.add("hidden"); el.textContent=""; return; }
+    el.textContent = msg; el.classList.remove("hidden");
+  }
+
+  /* ---------- navigation ---------- */
+  $("btn-give").addEventListener("click", function(){ show("view-give"); });
+  $("btn-get").addEventListener("click", function(){ show("view-get"); });
+  Array.prototype.forEach.call(document.querySelectorAll(".js-back"), function(b){
+    b.addEventListener("click", function(){ show("view-landing"); });
+  });
+  $("preview-back").addEventListener("click", function(){ show("view-give"); });
+
+  /* deep links: ?flow=give&occasion=christmas (used by invite emails) */
+  var params = new URLSearchParams(location.search);
+  if(params.get("flow") === "give"){
+    var occ = params.get("occasion");
+    if(occ && ["christmas","birthday","other"].indexOf(occ) !== -1){ $("give-occasion").value = occ; }
+    show("view-give");
+  } else if(params.get("flow") === "get"){
+    show("view-get");
+  }
+
+  /* ---------- email chips ---------- */
+  var chipsBox = $("chips");
+  var emailInput = $("give-emails");
+
+  function renderChips(){
+    Array.prototype.forEach.call(chipsBox.querySelectorAll(".chip"), function(c){ c.remove(); });
+    emails.forEach(function(em, i){
+      var chip = document.createElement("span");
+      chip.className = "chip";
+      chip.textContent = em + " ";
+      var x = document.createElement("button");
+      x.type = "button"; x.textContent = "✕"; x.setAttribute("aria-label","Remove " + em);
+      x.addEventListener("click", function(){ emails.splice(i,1); renderChips(); });
+      chip.appendChild(x);
+      chipsBox.insertBefore(chip, emailInput);
+    });
+  }
+  function tryAddEmail(){
+    var v = emailInput.value.trim().replace(/,$/,"");
+    if(!v) return true;
+    if(!isEmail(v) || emails.length >= MAX_EMAILS || emails.indexOf(v.toLowerCase()) !== -1){
+      chipsBox.classList.remove("shake"); void chipsBox.offsetWidth; chipsBox.classList.add("shake");
+      return false;
+    }
+    emails.push(v.toLowerCase());
+    emailInput.value = "";
+    renderChips();
+    return true;
+  }
+  emailInput.addEventListener("keydown", function(e){
+    if(e.key === "Enter" || e.key === ","){ e.preventDefault(); tryAddEmail(); }
+    if(e.key === "Backspace" && !emailInput.value && emails.length){ emails.pop(); renderChips(); }
+  });
+  emailInput.addEventListener("blur", tryAddEmail);
+
+  /* ---------- tabs ---------- */
+  var wishes = $("wishes");
+  var tabs = document.querySelectorAll(".tab");
+
+  function updateCounts(){
+    Array.prototype.forEach.call(tabs, function(t){
+      var sec = t.getAttribute("data-section");
+      var n = sections[sec].split("\n").filter(function(l){ return l.trim(); }).length;
+      t.querySelector(".count").textContent = n ? "(" + n + ")" : "";
+    });
+  }
+  function selectTab(sec){
+    sections[activeSection] = wishes.value;      // save current before switching
+    activeSection = sec;
+    wishes.value = sections[sec];                // restore target
+    Array.prototype.forEach.call(tabs, function(t){
+      t.setAttribute("aria-selected", String(t.getAttribute("data-section") === sec));
+    });
+    $("section-desc").textContent = sectionDesc[sec];
+    updateCounts();
+    wishes.focus();
+  }
+  Array.prototype.forEach.call(tabs, function(t){
+    t.addEventListener("click", function(){ selectTab(t.getAttribute("data-section")); });
+  });
+  wishes.addEventListener("input", function(){ sections[activeSection] = wishes.value; updateCounts(); });
+  $("section-desc").textContent = sectionDesc.needs;
+
+  /* ---------- strict fail-safe validation (everything required except special notes) ---------- */
+  function giveValidationError(){
+    var name = $("give-name").value.trim();
+    var senderEmail = $("give-sender-email").value.trim();
+    if(name.length < 2) return "Please write your name — your people should know who the hints are from.";
+    if(!isEmail(senderEmail)) return "Add your email — we send you a confirmation link before anything goes out.";
+    if(emails.length === 0) return "Add at least one email address to send the hints to.";
+    var order = ["needs","wants","likes"];
+    for(var i = 0; i < order.length; i++){
+      if(!sections[order[i]].trim()){
+        return "The " + SECTION_TITLES[order[i]] + " section is still empty — every section needs at least one line. Only Special notes may stay empty.";
+      }
+    }
+    return null;
+  }
+
+  function givePayload(){
+    return {
+      senderName: $("give-name").value.trim(),
+      senderEmail: $("give-sender-email").value.trim().toLowerCase(),
+      recipients: emails,
+      occasion: $("give-occasion").value,
+      sections: { needs:sections.needs.trim(), wants:sections.wants.trim(), likes:sections.likes.trim() },
+      specialNotes: $("give-notes").value.trim(),
+      website: document.querySelector("#form-give [name=website]").value // honeypot
+    };
+  }
+
+  /* ---------- step 1 → preview ---------- */
+  $("form-give").addEventListener("submit", function(e){
+    e.preventDefault();
+    setError("give-error", null);
+    sections[activeSection] = wishes.value;
+    tryAddEmail(); // capture a typed-but-unconfirmed email
+
+    var problem = giveValidationError();
+    if(problem){ setError("give-error", problem); return; }
+
+    var btn = $("give-preview-btn");
+    btn.disabled = true;
+    var original = btn.textContent;
+    btn.textContent = "Turning wishes into hints…";
+
+    fetch("/api/mask", {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify(givePayload())
+    }).then(function(res){
+      if(!res.ok){ return res.json().then(function(j){ throw new Error(j.error || "Something went wrong — please try again."); }); }
+      return res.json();
+    }).then(function(data){
+      previewIsDemo = false;
+      $("preview-note").classList.add("hidden");
+      renderPreview(data.hints);
+      show("view-preview");
+    }).catch(function(err){
+      if(err instanceof TypeError){
+        // static preview without the backend → show example hints so the step is explorable
+        previewIsDemo = true;
+        var note = $("preview-note");
+        note.textContent = "Preview mode: the backend isn't connected yet, so these are example hints — once deployed, your real wishes are masked here.";
+        note.classList.remove("hidden");
+        renderPreview({
+          needs: ["(example) Warm socks for winter runs"],
+          wants: ["(example) Quality noise-cancelling headphones — the type, never the brand"],
+          likes: ["(example) Anything for a slow coffee-lover's morning"]
+        });
+        show("view-preview");
+      } else {
+        setError("give-error", err.message);
+      }
+    }).finally(function(){
+      btn.disabled = false;
+      btn.textContent = original;
+    });
+  });
+
+  /* ---------- preview rendering & editing ---------- */
+  function renderPreview(hints){
+    var wrap = $("preview-sections");
+    wrap.innerHTML = "";
+    setError("preview-error", null);
+    ["needs","wants","likes"].forEach(function(sec){
+      var block = document.createElement("div");
+      var h = document.createElement("h3");
+      h.className = "section-title";
+      h.textContent = SECTION_TITLES[sec];
+      block.appendChild(h);
+
+      var list = document.createElement("div");
+      list.setAttribute("data-list", sec);
+      (hints[sec] || []).forEach(function(txt){ list.appendChild(hintRow(txt)); });
+      block.appendChild(list);
+
+      var add = document.createElement("button");
+      add.type = "button"; add.className = "add-hint"; add.textContent = "+ add a hint";
+      add.addEventListener("click", function(){
+        var row = hintRow("");
+        list.appendChild(row);
+        row.querySelector("input").focus();
+      });
+      block.appendChild(add);
+      wrap.appendChild(block);
+    });
+  }
+  function hintRow(text){
+    var row = document.createElement("div");
+    row.className = "hint-row";
+    var input = document.createElement("input");
+    input.type = "text"; input.value = text; input.maxLength = 160;
+    input.setAttribute("aria-label","Hint");
+    var del = document.createElement("button");
+    del.type = "button"; del.className = "del-hint"; del.textContent = "✕";
+    del.setAttribute("aria-label","Remove this hint");
+    del.addEventListener("click", function(){ row.remove(); });
+    row.appendChild(input); row.appendChild(del);
+    return row;
+  }
+  function collectHints(){
+    var out = {};
+    ["needs","wants","likes"].forEach(function(sec){
+      out[sec] = Array.prototype.map.call(
+        document.querySelectorAll('[data-list="' + sec + '"] input'),
+        function(i){ return i.value.trim(); }
+      ).filter(Boolean);
+    });
+    return out;
+  }
+
+  /* ---------- step 2 → send (after confirmation email) ---------- */
+  $("preview-send").addEventListener("click", function(){
+    setError("preview-error", null);
+    var hints = collectHints();
+    var order = ["needs","wants","likes"];
+    for(var i = 0; i < order.length; i++){
+      if(hints[order[i]].length === 0){
+        setError("preview-error", "The " + SECTION_TITLES[order[i]] + " section has no hints left — every section needs at least one.");
+        return;
+      }
+    }
+    if(previewIsDemo){
+      setError("preview-error", "Preview mode: the backend isn't connected yet, so nothing was actually sent. Once deployed (see README), this sends you a confirmation email first.");
+      return;
+    }
+
+    var payload = givePayload();
+    payload.hints = hints;
+
+    send("/api/give-hint", payload, $("preview-send"), "preview-error", function(){
+      $("postmark-word").textContent = "Almost!";
+      $("success-title").textContent = "One click to go ✉️";
+      $("success-text").textContent = "We've emailed a confirmation link to " + payload.senderEmail +
+        ". Your hints go out to " + payload.recipients.length +
+        (payload.recipients.length === 1 ? " person" : " people") +
+        " only after you click it — until then, nothing is sent.";
+      show("view-success");
+      resetGive();
+    });
+  });
+
+  function resetGive(){
+    $("form-give").reset();
+    emails = []; renderChips();
+    sections = { needs:"", wants:"", likes:"" };
+    selectTab("needs");
+  }
+
+  /* ---------- submit: get a hint ---------- */
+  $("form-get").addEventListener("submit", function(e){
+    e.preventDefault();
+    setError("get-error", null);
+
+    var name = $("get-name").value.trim();
+    var email = $("get-email").value.trim();
+
+    if(name.length < 2){ setError("get-error","Please write your name — they should know who's asking."); return; }
+    if(!isEmail(email)){ setError("get-error","That email address doesn't look right — please check it."); return; }
+
+    var payload = {
+      requesterName: name,
+      targetEmail: email.toLowerCase(),
+      occasion: $("get-occasion").value,
+      website: document.querySelector("#form-get [name=website]").value
+    };
+    send("/api/get-hint", payload, $("get-send"), "get-error", function(){
+      $("postmark-word").textContent = "Sent!";
+      $("success-title").textContent = "Off it goes ✉️";
+      $("success-text").textContent = "We've asked " + email + " for a few hints, nicely and on your behalf. " +
+        "You'll hear from them once they fill in their wishes.";
+      show("view-success");
+      $("form-get").reset();
+    });
+  });
+
+  /* ---------- shared sender ---------- */
+  function send(url, payload, btn, errorId, onOk){
+    btn.disabled = true;
+    var original = btn.textContent;
+    btn.textContent = "Sealing the envelope…";
+    fetch(url, {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify(payload)
+    }).then(function(res){
+      if(!res.ok){ return res.json().then(function(j){ throw new Error(j.error || "Something went wrong — please try again."); }); }
+      return res.json();
+    }).then(function(){
+      onOk();
+    }).catch(function(err){
+      if(err instanceof TypeError){
+        setError(errorId, "Preview mode: the backend isn't connected yet, so nothing was actually sent. Once deployed (see README), this will work for real.");
+      } else {
+        setError(errorId, err.message);
+      }
+    }).finally(function(){
+      btn.disabled = false;
+      btn.textContent = original;
+    });
+  }
+
+})();
+</script>
+</body>
+</html>
