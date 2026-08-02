@@ -1,8 +1,8 @@
 // api/give-hint.js  (Vercel serverless function)
 // Step 2 of the give flow (after the on-page preview).
 // FAIL-SAFE pipeline — if ANY step fails, NOTHING is sent to recipients:
-//   1. strict validation (all fields required, only specialNotes may be empty)
-//   2. scrub edited hints again (no brand/model may leak back in)
+//   1. strict validation (at least one item across hints/exact)
+//   2. scrub edited hints again (no brand/model may leak back in) — exact bypasses scrub
 //   3. blocklist check (Supabase required — no storage, no sending)
 //   4. store the submission as PENDING with a one-time token
 //   5. email a confirmation link to the sender — recipients get nothing yet.
@@ -28,13 +28,12 @@ export default async function handler(req, res) {
   if (h.error) return res.status(400).json({ error: h.error });
 
   // ---------- step 2: re-scrub edited hints (fail-safe against leaks) ----------
+  // Only the "hints" array is scrubbed — "exact" passes through untouched.
   const hints = scrubAgainstRaw(v.sections, h.hints);
-  for (const key of ["needs", "wants", "likes"]) {
-    if (!hints[key].length) {
-      return res.status(422).json({
-        error: `One of your edited ${key} hints reveals the exact wish (a brand or model slipped in) — please reword it.`
-      });
-    }
+  if (hints.hints.length === 0 && hints.exact.length === 0) {
+    return res.status(422).json({
+      error: "After checking for leaked brands, no hints or wishes are left — please reword and try again."
+    });
   }
 
   try {
@@ -53,8 +52,8 @@ export default async function handler(req, res) {
       sender_email: v.senderEmail,
       occasion: v.occasion,
       recipients,                    // jsonb
-      raw_sections: v.sections,      // jsonb — the private wishes
-      masked_hints: hints,           // jsonb — what recipients will see
+      raw_sections: v.sections,      // jsonb — the private wishes { hints, exact }
+      masked_hints: hints,           // jsonb — what recipients will see { hints: [...], exact: [...] }
       special_notes: v.specialNotes || null,
       token,
       status: "pending",

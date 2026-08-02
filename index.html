@@ -184,6 +184,20 @@
   }
   .tab .count{font-size:14px;font-family:'EB Garamond',serif;font-weight:400;color:var(--pencil)}
 
+  /* ---------- inspiration tags ---------- */
+  .inspire-tags{
+    display:flex;flex-wrap:wrap;gap:6px;
+    margin-bottom:10px;
+  }
+  .inspire-tag{
+    font-family:'EB Garamond',serif;font-size:13px;font-style:italic;
+    color:var(--pencil);background:#eadfc4;
+    border:1px solid var(--rule);border-radius:12px;
+    padding:2px 10px;cursor:pointer;
+    transition:background .15s, color .15s;
+  }
+  .inspire-tag:hover{background:#ddd0b2;color:var(--ink)}
+
   /* ---------- preview hint rows ---------- */
   .hint-row{display:flex;gap:8px;align-items:center;margin-top:4px}
   .hint-row input{font-size:20px;flex:1}
@@ -197,6 +211,11 @@
     color:var(--pencil);text-decoration:underline;text-underline-offset:3px;
     margin-top:8px;padding:0;
   }
+  .preview-bullet{
+    font-size:16px;min-width:18px;text-align:center;
+  }
+  .preview-bullet.star{color:var(--seal)}
+  .preview-bullet.check{color:#5a7a4a}
 
   /* ---------- buttons ---------- */
   .stamp-btn{
@@ -348,12 +367,12 @@
 
       <div class="field">
         <label id="wishes-label">Your wishes</label>
-        <p class="hint-text">Write freely, one wish per line. Recipients never see this text — it is transformed into hints, and you'll review every hint before sending. All three sections are required.</p>
+        <p class="hint-text">Choose a tab: <strong>Hints &amp; Surprises</strong> for things the AI will rephrase into gentle clues, or <strong>Exact Wishes</strong> for things you want delivered word-for-word. At least one tab needs content.</p>
         <div class="tabs" role="tablist" aria-labelledby="wishes-label">
-          <button class="tab" type="button" role="tab" data-section="needs" aria-selected="true">Needs <span class="count"></span></button>
-          <button class="tab" type="button" role="tab" data-section="wants" aria-selected="false">Wants <span class="count"></span></button>
-          <button class="tab" type="button" role="tab" data-section="likes" aria-selected="false">Likes <span class="count"></span></button>
+          <button class="tab" type="button" role="tab" data-section="hints" aria-selected="true">Hints &amp; Surprises <span class="count"></span></button>
+          <button class="tab" type="button" role="tab" data-section="exact" aria-selected="false">Exact Wishes <span class="count"></span></button>
         </div>
+        <div class="inspire-tags" id="inspire-tags"></div>
         <textarea id="wishes" aria-label="Wishes for the selected section" placeholder="e.g. new running socks…"></textarea>
         <p class="hint-text" id="section-desc" style="margin-top:6px"></p>
       </div>
@@ -451,20 +470,46 @@
   "use strict";
 
   /* ---------- state ---------- */
-  var sections = { needs:"", wants:"", likes:"" };
-  var activeSection = "needs";
+  var sections = { hints:"", exact:"" };
+  var activeSection = "hints";
   var emails = [];
   var MAX_EMAILS = 20;
   var previewIsDemo = false;
 
-  var SECTION_TITLES = { needs:"Needs", wants:"Wants", likes:"Likes" };
+  var SECTION_TITLES = { hints:"Hints & Surprises", exact:"Exact Wishes" };
   var sectionDesc = {
-    needs: "Practical things you actually need. Shared as practical, brand-free hints.",
-    wants: "Things you'd love to get. Shared as a type of gift — never the exact product.",
-    likes: "Interests, hobbies, favourite things. Shared as gentle directions to explore."
+    hints: "Write freely about interests, hobbies, and general directions. These will be turned into gentle, brand-free hints — the surprise stays alive.",
+    exact: "Specific items you want exactly as described — a book title, a model number, a size. These go straight to your people, untouched."
+  };
+  var sectionPlaceholders = {
+    hints: "e.g. I like running, something cosy for winter evenings…",
+    exact: "e.g. Sony WH-1000XM5 headphones, Brave New World by Aldous Huxley…"
   };
 
-  /* ---------- fun rotating placeholders (all safely fictional or historical) ---------- */
+  /* ---------- inspiration tags ---------- */
+  var inspireTags = {
+    hints: ["needs", "wants", "likes", "craves", "dreams of", "is into", "enjoys", "hobbies"],
+    exact: ["a specific book", "headphones", "a gadget", "clothing (size!)", "a game", "a voucher"]
+  };
+  function renderInspireTags(sec){
+    var wrap = $("inspire-tags");
+    wrap.innerHTML = "";
+    (inspireTags[sec] || []).forEach(function(tag){
+      var btn = document.createElement("button");
+      btn.type = "button"; btn.className = "inspire-tag"; btn.textContent = tag;
+      btn.addEventListener("click", function(){
+        var w = $("wishes");
+        var prefix = w.value.length && !w.value.endsWith("\n") ? "\n" : "";
+        w.value += prefix + tag + ": ";
+        w.focus();
+        sections[activeSection] = w.value;
+        updateCounts();
+      });
+      wrap.appendChild(btn);
+    });
+  }
+
+  /* ---------- fun rotating placeholders ---------- */
   var GIVE_IDENTITIES = [
     ["Santa Claus", "santa@northpole.com"],
     ["William Shakespeare", "will@globetheatre.co"],
@@ -563,10 +608,12 @@
     sections[activeSection] = wishes.value;      // save current before switching
     activeSection = sec;
     wishes.value = sections[sec];                // restore target
+    wishes.placeholder = sectionPlaceholders[sec] || "";
     Array.prototype.forEach.call(tabs, function(t){
       t.setAttribute("aria-selected", String(t.getAttribute("data-section") === sec));
     });
     $("section-desc").textContent = sectionDesc[sec];
+    renderInspireTags(sec);
     updateCounts();
     wishes.focus();
   }
@@ -574,20 +621,21 @@
     t.addEventListener("click", function(){ selectTab(t.getAttribute("data-section")); });
   });
   wishes.addEventListener("input", function(){ sections[activeSection] = wishes.value; updateCounts(); });
-  $("section-desc").textContent = sectionDesc.needs;
 
-  /* ---------- strict fail-safe validation (everything required except special notes) ---------- */
+  // initialise first tab
+  $("section-desc").textContent = sectionDesc.hints;
+  wishes.placeholder = sectionPlaceholders.hints;
+  renderInspireTags("hints");
+
+  /* ---------- validation (at least one item total across both tabs) ---------- */
   function giveValidationError(){
     var name = $("give-name").value.trim();
     var senderEmail = $("give-sender-email").value.trim();
     if(name.length < 2) return "Please write your name — your people should know who the hints are from.";
     if(!isEmail(senderEmail)) return "Add your email — we send you a confirmation link before anything goes out.";
     if(emails.length === 0) return "Add at least one email address to send the hints to.";
-    var order = ["needs","wants","likes"];
-    for(var i = 0; i < order.length; i++){
-      if(!sections[order[i]].trim()){
-        return "The " + SECTION_TITLES[order[i]] + " section is still empty — every section needs at least one line. Only Special notes may stay empty.";
-      }
+    if(!sections.hints.trim() && !sections.exact.trim()){
+      return "Write at least one wish — either in Hints & Surprises or in Exact Wishes. Both tabs can't be empty.";
     }
     return null;
   }
@@ -598,7 +646,7 @@
       senderEmail: $("give-sender-email").value.trim().toLowerCase(),
       recipients: emails,
       occasion: $("give-occasion").value,
-      sections: { needs:sections.needs.trim(), wants:sections.wants.trim(), likes:sections.likes.trim() },
+      sections: { hints:sections.hints.trim(), exact:sections.exact.trim() },
       specialNotes: $("give-notes").value.trim(),
       website: document.querySelector("#form-give [name=website]").value // honeypot
     };
@@ -617,7 +665,9 @@
     var btn = $("give-preview-btn");
     btn.disabled = true;
     var original = btn.textContent;
-    btn.textContent = "Turning wishes into hints…";
+    btn.textContent = sections.hints.trim()
+      ? "Turning wishes into hints…"
+      : "Preparing your wishes…";
 
     fetch("/api/mask", {
       method:"POST",
@@ -633,15 +683,14 @@
       show("view-preview");
     }).catch(function(err){
       if(err instanceof TypeError){
-        // static preview without the backend → show example hints so the step is explorable
+        // static preview without the backend → show example hints
         previewIsDemo = true;
         var note = $("preview-note");
         note.textContent = "Preview mode: the backend isn't connected yet, so these are example hints — once deployed, your real wishes are masked here.";
         note.classList.remove("hidden");
         renderPreview({
-          needs: ["(example) Warm socks for winter runs"],
-          wants: ["(example) Quality noise-cancelling headphones — the type, never the brand"],
-          likes: ["(example) Anything for a slow coffee-lover's morning"]
+          hints: ["(example) Warm socks for winter runs", "(example) Something for a slow coffee-lover's morning"],
+          exact: ["(example) Sony WH-1000XM5", "(example) Brave New World by Aldous Huxley"]
         });
         show("view-preview");
       } else {
@@ -658,22 +707,41 @@
     var wrap = $("preview-sections");
     wrap.innerHTML = "";
     setError("preview-error", null);
-    ["needs","wants","likes"].forEach(function(sec){
+
+    var secs = [
+      { key:"hints", title:"Hints & Surprises", bullet:"✦", bulletClass:"star",
+        sub:"These are AI-generated hints — the exact wishes stay private." },
+      { key:"exact", title:"Exact Wishes", bullet:"✓", bulletClass:"check",
+        sub:"These are exactly what was asked for — no rephrasing." }
+    ];
+
+    secs.forEach(function(sec){
+      var items = hints[sec.key] || [];
+      if(!items.length) return; // skip empty sections
+
       var block = document.createElement("div");
       var h = document.createElement("h3");
       h.className = "section-title";
-      h.textContent = SECTION_TITLES[sec];
+      if(sec.key === "exact") h.style.color = "#5a7a4a";
+      h.textContent = sec.title;
       block.appendChild(h);
 
+      var sub = document.createElement("p");
+      sub.className = "hint-text";
+      sub.style.marginTop = "0";
+      sub.textContent = sec.sub;
+      block.appendChild(sub);
+
       var list = document.createElement("div");
-      list.setAttribute("data-list", sec);
-      (hints[sec] || []).forEach(function(txt){ list.appendChild(hintRow(txt)); });
+      list.setAttribute("data-list", sec.key);
+      items.forEach(function(txt){ list.appendChild(hintRow(txt, sec.bullet, sec.bulletClass)); });
       block.appendChild(list);
 
       var add = document.createElement("button");
-      add.type = "button"; add.className = "add-hint"; add.textContent = "+ add a hint";
+      add.type = "button"; add.className = "add-hint";
+      add.textContent = sec.key === "hints" ? "+ add a hint" : "+ add a wish";
       add.addEventListener("click", function(){
-        var row = hintRow("");
+        var row = hintRow("", sec.bullet, sec.bulletClass);
         list.appendChild(row);
         row.querySelector("input").focus();
       });
@@ -681,9 +749,13 @@
       wrap.appendChild(block);
     });
   }
-  function hintRow(text){
+
+  function hintRow(text, bullet, bulletClass){
     var row = document.createElement("div");
     row.className = "hint-row";
+    var bulletSpan = document.createElement("span");
+    bulletSpan.className = "preview-bullet " + bulletClass;
+    bulletSpan.textContent = bullet;
     var input = document.createElement("input");
     input.type = "text"; input.value = text; input.maxLength = 160;
     input.setAttribute("aria-label","Hint");
@@ -691,12 +763,13 @@
     del.type = "button"; del.className = "del-hint"; del.textContent = "✕";
     del.setAttribute("aria-label","Remove this hint");
     del.addEventListener("click", function(){ row.remove(); });
-    row.appendChild(input); row.appendChild(del);
+    row.appendChild(bulletSpan); row.appendChild(input); row.appendChild(del);
     return row;
   }
+
   function collectHints(){
-    var out = {};
-    ["needs","wants","likes"].forEach(function(sec){
+    var out = { hints:[], exact:[] };
+    ["hints","exact"].forEach(function(sec){
       out[sec] = Array.prototype.map.call(
         document.querySelectorAll('[data-list="' + sec + '"] input'),
         function(i){ return i.value.trim(); }
@@ -709,12 +782,9 @@
   $("preview-send").addEventListener("click", function(){
     setError("preview-error", null);
     var hints = collectHints();
-    var order = ["needs","wants","likes"];
-    for(var i = 0; i < order.length; i++){
-      if(hints[order[i]].length === 0){
-        setError("preview-error", "The " + SECTION_TITLES[order[i]] + " section has no hints left — every section needs at least one.");
-        return;
-      }
+    if(hints.hints.length === 0 && hints.exact.length === 0){
+      setError("preview-error", "There are no hints or wishes left — you need at least one.");
+      return;
     }
     if(previewIsDemo){
       setError("preview-error", "Preview mode: the backend isn't connected yet, so nothing was actually sent. Once deployed (see README), this sends you a confirmation email first.");
@@ -739,8 +809,8 @@
   function resetGive(){
     $("form-give").reset();
     emails = []; renderChips();
-    sections = { needs:"", wants:"", likes:"" };
-    selectTab("needs");
+    sections = { hints:"", exact:"" };
+    selectTab("hints");
   }
 
   /* ---------- submit: get a hint ---------- */
