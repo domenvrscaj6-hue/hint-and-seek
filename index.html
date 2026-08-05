@@ -298,102 +298,6 @@
   }
   footer a{color:inherit}
 
-  /* ---------- desk decorations (desktop only) ---------- */
-  .desk-decor{
-    position:fixed;
-    pointer-events:none;
-    z-index:0;
-    opacity:0;
-    transition:opacity .6s ease;
-  }
-  .desk-loaded .desk-decor{opacity:1}
-
-  /* wax seal — bottom left */
-  .decor-seal{
-    left:3vw;bottom:6vh;
-    width:72px;height:72px;
-    background:radial-gradient(circle at 48% 45%, #b5463c 0%, #8a3029 58%, #6b201a 100%);
-    border-radius:50%;
-    box-shadow:0 3px 12px rgba(0,0,0,.35), inset 0 -2px 6px rgba(0,0,0,.25);
-    transform:rotate(-12deg);
-    display:flex;align-items:center;justify-content:center;
-  }
-  .decor-seal::after{
-    content:"H&S";
-    font-family:'Caveat',cursive;font-size:20px;font-weight:700;
-    color:#f3ead7;letter-spacing:1px;text-shadow:0 1px 2px rgba(0,0,0,.3);
-  }
-
-  /* pencil — top right */
-  .decor-pencil{
-    right:4vw;top:14vh;
-    width:140px;height:10px;
-    background:linear-gradient(90deg, #e8c65a 0%, #d4a833 82%, #3a2c1c 82%, #3a2c1c 88%, #f5e6c8 88%, #f5e6c8 100%);
-    border-radius:1px 4px 4px 1px;
-    transform:rotate(-28deg);
-    box-shadow:0 2px 6px rgba(0,0,0,.25);
-    opacity:.7;
-  }
-
-  /* gift tag — right side */
-  .decor-tag{
-    right:5vw;bottom:22vh;
-    width:48px;height:64px;
-    background:#f0e4cb;
-    border:1px solid #c9b896;
-    border-radius:3px 3px 3px 3px;
-    transform:rotate(8deg);
-    box-shadow:0 2px 8px rgba(0,0,0,.2);
-    display:flex;align-items:center;justify-content:center;
-  }
-  .decor-tag::before{
-    content:"";
-    position:absolute;top:6px;left:50%;
-    width:10px;height:10px;
-    border:2px solid #a4443a;
-    border-radius:50%;
-    transform:translateX(-50%);
-  }
-  .decor-tag::after{
-    content:"🎁";
-    font-size:18px;margin-top:8px;
-  }
-
-  /* coffee ring stain — top left */
-  .decor-coffee{
-    left:5vw;top:18vh;
-    width:64px;height:64px;
-    border:3px solid rgba(120,80,30,.12);
-    border-radius:50%;
-    background:radial-gradient(circle, rgba(120,80,30,.04) 0%, transparent 70%);
-    transform:rotate(15deg);
-  }
-
-  /* small envelope — left mid */
-  .decor-envelope{
-    left:4vw;bottom:38vh;
-    width:56px;height:38px;
-    background:#e8dcc4;
-    border:1px solid #c9b896;
-    border-radius:2px;
-    transform:rotate(-6deg);
-    box-shadow:0 2px 6px rgba(0,0,0,.15);
-    overflow:hidden;
-  }
-  .decor-envelope::before{
-    content:"";
-    position:absolute;top:0;left:50%;
-    width:0;height:0;
-    border-left:28px solid transparent;
-    border-right:28px solid transparent;
-    border-top:22px solid #d4c5a4;
-    transform:translateX(-50%);
-  }
-
-  @media (max-width:900px){
-    .desk-decor{display:none!important}
-  }
-
   /* ---------- 3-step strip ---------- */
   .steps-strip{
     display:flex;
@@ -439,13 +343,6 @@
 </style>
 </head>
 <body>
-
-<!-- desk decorations (desktop only, hidden < 900px) -->
-<div class="desk-decor decor-seal"></div>
-<div class="desk-decor decor-pencil"></div>
-<div class="desk-decor decor-tag"></div>
-<div class="desk-decor decor-coffee"></div>
-<div class="desk-decor decor-envelope"></div>
 
 <main class="sheet" id="sheet">
 
@@ -1031,12 +928,6 @@
   }
 
 })();
-</script>
-<script>
-// Fade in desk decorations after page settles
-document.addEventListener("DOMContentLoaded", function(){
-  setTimeout(function(){ document.body.classList.add("desk-loaded"); }, 300);
-});
 </script>
 </body>
 </html>
