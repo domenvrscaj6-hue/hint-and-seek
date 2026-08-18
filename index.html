@@ -339,6 +339,78 @@
     .step-label{font-size:12.5px}
     .step-icon{font-size:26px}
   }
+  /* ---------- feedback widget ---------- */
+  .fb-fab{
+    position:fixed;bottom:20px;right:20px;z-index:1000;
+    width:48px;height:48px;border-radius:50%;
+    background:var(--seal);color:#fdf6e6;
+    border:none;cursor:pointer;
+    font-size:22px;line-height:1;
+    box-shadow:0 3px 12px rgba(0,0,0,.35);
+    transition:transform .2s, background .2s;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .fb-fab:hover{background:var(--seal-dark);transform:scale(1.08)}
+
+  .fb-popup{
+    position:fixed;bottom:78px;right:20px;z-index:1000;
+    width:300px;
+    background:var(--paper);
+    border:1px solid var(--rule);
+    border-radius:6px;
+    box-shadow:0 8px 28px rgba(0,0,0,.4);
+    font-family:'EB Garamond',serif;
+    padding:20px;
+    transform:translateY(10px);opacity:0;
+    transition:transform .2s ease, opacity .2s ease;
+    pointer-events:none;
+  }
+  .fb-popup.open{
+    transform:translateY(0);opacity:1;
+    pointer-events:auto;
+  }
+  .fb-popup h4{
+    font-family:'Caveat',cursive;font-size:24px;
+    color:var(--ink);margin:0 0 12px;
+  }
+  .fb-popup select{
+    width:100%;padding:6px 8px;
+    font-family:'EB Garamond',serif;font-size:16px;
+    border:1px solid var(--rule);border-radius:3px;
+    background:transparent;color:var(--ink);
+    margin-bottom:10px;cursor:pointer;
+  }
+  .fb-popup textarea{
+    width:100%;height:90px;resize:vertical;
+    font-family:'Caveat',cursive;font-size:18px;
+    color:var(--ink);background:transparent;
+    border:1px solid var(--rule);border-radius:3px;
+    padding:8px 10px;margin-bottom:10px;
+  }
+  .fb-popup textarea::placeholder{color:var(--pencil);font-style:italic}
+  .fb-popup .fb-send{
+    width:100%;padding:9px;
+    background:var(--seal);color:#fdf6e6;
+    border:none;border-radius:3px;cursor:pointer;
+    font-family:'EB Garamond',serif;font-size:16px;
+    font-style:italic;letter-spacing:.05em;
+    transition:background .15s;
+  }
+  .fb-popup .fb-send:hover{background:var(--seal-dark)}
+  .fb-popup .fb-send:disabled{opacity:.6;cursor:default}
+  .fb-popup .fb-msg{
+    font-size:14px;font-style:italic;color:var(--ink-soft);
+    margin-top:8px;text-align:center;
+  }
+  .fb-popup .fb-close{
+    position:absolute;top:8px;right:10px;
+    background:none;border:none;cursor:pointer;
+    font-size:18px;color:var(--pencil);line-height:1;
+  }
+  @media (max-width:400px){
+    .fb-popup{width:calc(100vw - 32px);right:16px;bottom:74px}
+    .fb-fab{width:42px;height:42px;font-size:20px;bottom:16px;right:16px}
+  }
 
 </style>
 </head>
@@ -525,6 +597,21 @@
   Hint &amp; Seek never shows your exact wishes to gift-givers. Recipient emails are used only for delivery,
   and every email includes a one-click way to opt out of future notes.
 </footer>
+
+<!-- feedback widget -->
+<button class="fb-fab" id="fb-fab" type="button" aria-label="Send feedback">💬</button>
+<div class="fb-popup" id="fb-popup">
+  <button class="fb-close" id="fb-close" type="button" aria-label="Close">✕</button>
+  <h4>Send us a note</h4>
+  <select id="fb-type">
+    <option value="suggestion">💡 Suggestion</option>
+    <option value="bug">🐛 Bug report</option>
+    <option value="other">💬 Other</option>
+  </select>
+  <textarea id="fb-message" placeholder="What's on your mind?"></textarea>
+  <button class="fb-send" id="fb-send" type="button">Send feedback</button>
+  <div class="fb-msg hidden" id="fb-msg"></div>
+</div>
 
 <script>
 (function(){
@@ -927,6 +1014,54 @@
     });
   }
 
+})();
+</script>
+
+<!-- feedback widget logic -->
+<script>
+(function(){
+  var fab = document.getElementById("fb-fab");
+  var popup = document.getElementById("fb-popup");
+  var closeBtn = document.getElementById("fb-close");
+  var sendBtn = document.getElementById("fb-send");
+  var msgEl = document.getElementById("fb-msg");
+  var typeEl = document.getElementById("fb-type");
+  var textEl = document.getElementById("fb-message");
+
+  function toggle(){
+    var open = popup.classList.toggle("open");
+    fab.textContent = open ? "✕" : "💬";
+    if(open){ msgEl.classList.add("hidden"); textEl.focus(); }
+  }
+  fab.addEventListener("click", toggle);
+  closeBtn.addEventListener("click", toggle);
+
+  sendBtn.addEventListener("click", function(){
+    var msg = textEl.value.trim();
+    if(!msg){ textEl.focus(); return; }
+
+    sendBtn.disabled = true;
+    sendBtn.textContent = "Sending…";
+    msgEl.classList.add("hidden");
+
+    fetch("/api/feedback", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: typeEl.value, message: msg })
+    }).then(function(res){
+      if(!res.ok) throw new Error("Failed");
+      msgEl.textContent = "Thank you! Your feedback was sent. ✉️";
+      msgEl.classList.remove("hidden");
+      textEl.value = "";
+      setTimeout(function(){ popup.classList.remove("open"); fab.textContent = "💬"; }, 2000);
+    }).catch(function(){
+      msgEl.textContent = "Couldn't send — please try again.";
+      msgEl.classList.remove("hidden");
+    }).finally(function(){
+      sendBtn.disabled = false;
+      sendBtn.textContent = "Send feedback";
+    });
+  });
 })();
 </script>
 </body>
