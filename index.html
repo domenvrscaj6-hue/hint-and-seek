@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Hint &amp; Seek — gift hints, the old-fashioned way</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23f3ead7'/%3E%3C!-- envelope body --%3E%3Crect x='4' y='9' width='24' height='16' rx='2' fill='%23e6d9bd' stroke='%23c4b496' stroke-width='.8'/%3E%3C!-- envelope flap --%3E%3Cpath d='M4 11 L16 19 L28 11' fill='none' stroke='%23c4b496' stroke-width='.8' stroke-linejoin='round'/%3E%3Cpath d='M4 9 L16 18 L28 9 Z' fill='%23efe4c9' stroke='%23c4b496' stroke-width='.8' stroke-linejoin='round'/%3E%3C!-- paper peeking out --%3E%3Crect x='9' y='5' width='14' height='14' rx='1' fill='%23faf5ea' stroke='%23d8c9a8' stroke-width='.6'/%3E%3C!-- paper lines --%3E%3Cline x1='11' y1='8' x2='21' y2='8' stroke='%23d8c9a8' stroke-width='.5'/%3E%3Cline x1='11' y1='10.5' x2='21' y2='10.5' stroke='%23d8c9a8' stroke-width='.5'/%3E%3Cline x1='11' y1='13' x2='18' y2='13' stroke='%23d8c9a8' stroke-width='.5'/%3E%3C!-- wax seal --%3E%3Ccircle cx='16' cy='22' r='4.5' fill='%23a4443a'/%3E%3Ccircle cx='16' cy='22' r='3.2' fill='none' stroke='%237e332b' stroke-width='.5'/%3E%3Ctext x='16' y='23.8' text-anchor='middle' font-size='5' font-weight='bold' font-family='serif' fill='%23fdf6e6'%3EH%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
@@ -538,6 +539,12 @@
       </div>
 
       <div class="field">
+        <label for="get-requester-email">Your email</label>
+        <p class="hint-text">So they can reach you if they need to — included in the invite.</p>
+        <input type="email" id="get-requester-email" placeholder="your@email.com" inputmode="email" autocomplete="email" required>
+      </div>
+
+      <div class="field">
         <label for="get-email">Their email</label>
         <p class="hint-text">The person you'd love some hints from.</p>
         <input type="email" id="get-email" placeholder="name@example.com" inputmode="email" required>
@@ -967,13 +974,16 @@
     setError("get-error", null);
 
     var name = $("get-name").value.trim();
+    var requesterEmail = $("get-requester-email").value.trim();
     var email = $("get-email").value.trim();
 
     if(name.length < 2){ setError("get-error","Please write your name — they should know who's asking."); return; }
+    if(!isEmail(requesterEmail)){ setError("get-error","Please add your email so they know how to reach you."); return; }
     if(!isEmail(email)){ setError("get-error","That email address doesn't look right — please check it."); return; }
 
     var payload = {
       requesterName: name,
+      requesterEmail: requesterEmail.toLowerCase(),
       targetEmail: email.toLowerCase(),
       occasion: $("get-occasion").value,
       website: document.querySelector("#form-get [name=website]").value

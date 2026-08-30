@@ -15,10 +15,12 @@ export default async function handler(req, res) {
   if (b.website) return res.status(200).json({ ok: true }); // honeypot
 
   const requesterName = String(b.requesterName || "").trim().slice(0, 80);
+  const requesterEmail = String(b.requesterEmail || "").trim().toLowerCase();
   const targetEmail = String(b.targetEmail || "").trim().toLowerCase();
   const occasion = OCCASIONS.includes(b.occasion) ? b.occasion : null;
 
   if (requesterName.length < 2) return res.status(400).json({ error: "Please provide your name." });
+  if (!EMAIL_RE.test(requesterEmail)) return res.status(400).json({ error: "Please provide your email." });
   if (!EMAIL_RE.test(targetEmail)) return res.status(400).json({ error: "That email address doesn't look right." });
   if (!occasion) return res.status(400).json({ error: "Please choose an occasion." });
 
@@ -31,6 +33,7 @@ export default async function handler(req, res) {
 
     await insertRow("hint_requests", {
       requester_name: requesterName,
+      requester_email: requesterEmail,
       target_email: targetEmail,
       occasion
     });
@@ -38,6 +41,7 @@ export default async function handler(req, res) {
     const siteUrl = process.env.SITE_URL || `https://${req.headers.host}`;
     const { subject, html } = buildInviteEmail({
       requesterName,
+      requesterEmail,
       occasion,
       siteUrl,
       unsubscribeUrl: unsubscribeUrl(siteUrl, targetEmail)
