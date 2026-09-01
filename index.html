@@ -165,7 +165,7 @@
   @keyframes shake{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
 
   /* ---------- tabs ---------- */
-  .tabs{display:flex;gap:6px;margin-top:14px}
+  .tabs{display:flex;gap:6px;margin-top:24px}
   .tab{
     font-family:'Caveat', cursive;
     font-size:21px;font-weight:700;
@@ -483,7 +483,7 @@
 
       <div class="field">
         <label id="wishes-label">Your wishes</label>
-        <p class="hint-text">Choose a tab: <strong>Hints &amp; Surprises</strong> for things the AI will rephrase into gentle clues, or <strong>Exact Wishes</strong> for things you want delivered word-for-word. At least one tab needs content.</p>
+        <p class="hint-text" style="margin-bottom:18px">Choose a tab: <strong>Hints &amp; Surprises</strong> for things the AI will rephrase into gentle clues, or <strong>Exact Wishes</strong> for things you want delivered word-for-word. At least one tab needs content.</p>
         <div class="tabs" role="tablist" aria-labelledby="wishes-label">
           <button class="tab" type="button" role="tab" data-section="hints" aria-selected="true">Hints &amp; Surprises <span class="count"></span></button>
           <button class="tab" type="button" role="tab" data-section="exact" aria-selected="false">Exact Wishes <span class="count"></span></button>
@@ -643,8 +643,7 @@
 
   /* ---------- inspiration tags ---------- */
   var inspireTags = {
-    hints: ["needs", "wants", "likes", "craves", "dreams of", "is into", "enjoys", "hobbies"],
-    exact: ["a specific book", "headphones", "a gadget", "clothing (size!)", "a game", "a voucher"]
+    hints: ["needs", "wants", "likes", "craves", "dreams of", "is into", "enjoys", "hobbies"]
   };
   function renderInspireTags(sec){
     var wrap = $("inspire-tags");
