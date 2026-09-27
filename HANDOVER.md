@@ -179,3 +179,101 @@ are currently NOT a priority.)
 - When you change behaviour, update README.md and this file in the same commit.
 - The user is not a professional developer: explain changes simply, give exact
   copy-paste commands, and prefer small verifiable steps.
+
+### Working in parallel sessions (the user often runs 2–3 AI sessions at once)
+
+Several sessions have already built the same feature twice on separate branches
+(Sep 2026: two different rate limiters and two `schema.sql` versions). To avoid that:
+
+- **Start from the latest `main`.** Before changing anything: `git fetch origin` and base
+  your branch on `origin/main`. If your branch is behind `main`, merge `main` in first.
+- **Check open pull requests first.** If another open PR already touches the same feature
+  or the same files, tell the user and don't build it again.
+- **Shared hot-spot files:** `index.html`, `schema.sql`, `lib/emails.js`, `HANDOVER.md`,
+  `README.md`. Keep changes to them small, and mention in your reply that you touched them,
+  so the user knows the other sessions must update from `main` after merging.
+- **One PR at a time into `main`.** After a PR is merged, other sessions must pull `main`
+  before continuing. If your PR was merged, restart your branch from `main` for follow-up work.
+- **Database changes live ONLY in `schema.sql`** (keep it safe to re-run: `if not exists`,
+  `create or replace`, `drop ... if exists` where needed). Never give the user standalone SQL
+  snippets in chat — tell them to run the whole `schema.sql` from `main` in the Supabase
+  SQL Editor.
+- **Tell the user which branch and PR your work is on**, and remind them to merge PRs one
+  by one.
+
+## 9. Session log
+
+### Sep 27, 2026 — branch `claude/epic-hopper-5z37sw` (PR #1, merged)
+
+**Done**
+- Phase 1: per-IP rate limiting and the nightly cleanup job.
+- Phase 3: analytics, `privacy.html`, icons, OG image and meta tags on `www.hintandseek.com`.
+- Retention periods added to the cleanup job, matching `privacy.html`.
+- Fixed the missing `hint_requests.requester_email` column.
+- Merged main after #2 and resolved the conflicts.
+
+**Decisions (and why)**
+- Rate limiting and analytics live in Supabase, not Upstash or a third-party tool.
+  Supabase is already required, and the zero-dependency / zero-ops rule applies.
+- The rate limiter fails open. It only guards against abuse; the real fail-safes
+  (storage, blocklist, sender confirmation) are untouched.
+- Analytics store only event names and counts: no cookies, IPs, emails or text.
+  AI edit counts are computed in the browser and sanitized on the server.
+- Raw wishes are erased once sent. Sent submissions and invite requests are deleted
+  after 90 days. Nothing needed the data after sending, and the privacy page must be honest.
+- The privacy page says the Gemini API is on the paid plan, so the text is not used for
+  training. The owner confirmed this.
+
+**Left open**
+- `privacy.html` still needs the operator's name and a contact email (GDPR). The owner
+  has not provided them yet, so the page points to the 💬 feedback button.
+- Owner actions:
+  - re-run `schema.sql` in Supabase and check the `hint-seek-cleanup` cron job;
+  - check `SITE_URL` and `EMAIL_FROM` in Vercel;
+  - run the README checklist on the live site.
+- The pg_cron job was not tested outside Supabase (not available locally).
+- Lesson: three sessions ran in parallel on the same files (`index.html`, README,
+  HANDOVER). That caused conflicts and duplicated work, e.g. the OG domain was done
+  twice. Give each session its own area, merge PRs one at a time, and have every
+  session pull the latest `main` first.
+
+### Sep 27 2026, session `claude/zen-gauss-3k9o0m` (PRs #2, #3, #5)
+
+**Done (merged in #2 and #3):**
+- Docs brought up to date; the HANDOVER formatting was fixed.
+- Brand-leak check rewritten (`checkHints` in `lib/gemini.js`):
+  - Gemini now also returns a `brands` list, and edited hints are re-checked against it.
+  - `give-hint` refuses to send and names the leaking hint instead of dropping it silently.
+- Links in emails need a button click (GET shows a page, POST acts):
+  - confirm and unsubscribe work this way;
+  - confirm is atomic, so a double click can't send twice;
+  - RFC 8058 List-Unsubscribe headers are added.
+- The XSS on the unsubscribe page is fixed.
+- "Exact Wishes" was removed.
+- The invite link pre-fills the requester as a recipient (`?to=&from=`).
+- Readable errors are shown when a response isn't JSON, and the feedback form has a honeypot.
+- `siteUrlFrom()` strips the trailing slash from `SITE_URL`.
+- `schema.sql`:
+  - safe to re-run over earlier drafts;
+  - explicitly grants `hit_rate_limit` to `service_role`;
+  - the user ran it successfully in Supabase and the cron job is scheduled.
+
+**Open (PR #5, not merged yet):** only docs — this log and the "parallel sessions" rules in §8.
+
+**Decisions (and why):**
+- **Masking only, no "Exact Wishes".** Masking is the product; anything verbatim goes in the
+  optional "Anything specific?" note (placeholder shows "no scented candles" + an exact-book example).
+- **Rate limiting and cleanup: `main`'s version from PR #1 was kept.** This session had built
+  its own, and it was dropped to avoid two versions. Note that PR #1's limiter fails open.
+- **Supabase instead of Upstash for rate limiting.** It needs no new account or service.
+- **The user runs SQL by pasting `schema.sql` into the SQL Editor.** The Supabase connector was
+  offered but not needed; giving an AI production DB access is not worth it for one-off steps.
+
+**Left unfinished / ideas:**
+- Partial send failures in `confirm.js`: recipients whose email failed are not retried.
+- The requester email in the Get flow is not verified. The target sees it and can remove it;
+  a real fix would be a confirmation email for the requester.
+- There are no automated tests; everything was checked by hand with mocked services,
+  headless Chromium and local Postgres. A small zero-dependency `node --test` suite would help.
+- PR #4 (`happy-turing`, visual polish) is merged. This PR (#5) also carries the `epic-hopper`
+  session log, because both logs were appended to the end of this file and would have conflicted.
