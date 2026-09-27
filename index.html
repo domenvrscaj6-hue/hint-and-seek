@@ -112,7 +112,7 @@
     background-repeat:no-repeat;
     background-position:right 4px center;
   }
-  input:focus, select:focus, textarea:focus, button:focus-visible, .tab:focus-visible{
+  input:focus, select:focus, textarea:focus, button:focus-visible{
     outline:2px dashed var(--seal);
     outline-offset:3px;
   }
@@ -164,27 +164,6 @@
   .chips.shake{animation:shake .3s}
   @keyframes shake{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
 
-  /* ---------- tabs ---------- */
-  .tabs{display:flex;gap:6px;margin-top:24px}
-  .tab{
-    font-family:'Caveat', cursive;
-    font-size:21px;font-weight:700;
-    color:var(--ink-soft);
-    background:#e7dabb;
-    border:1px solid var(--rule);
-    border-bottom:none;
-    border-radius:8px 8px 0 0;
-    padding:6px 20px 4px;
-    cursor:pointer;
-    transform:translateY(1px);
-  }
-  .tab[aria-selected=true]{
-    background:var(--paper);
-    color:var(--seal);
-    box-shadow:0 -2px 3px rgba(0,0,0,.05);
-  }
-  .tab .count{font-size:14px;font-family:'EB Garamond',serif;font-weight:400;color:var(--pencil)}
-
   /* ---------- inspiration tags ---------- */
   .inspire-tags{
     display:flex;flex-wrap:wrap;gap:6px;
@@ -217,7 +196,6 @@
     font-size:16px;min-width:18px;text-align:center;
   }
   .preview-bullet.star{color:var(--seal)}
-  .preview-bullet.check{color:#5a7a4a}
 
   /* ---------- buttons ---------- */
   .stamp-btn{
@@ -446,7 +424,7 @@
   <section id="view-give" class="hidden">
     <div class="back-row"><button class="link-btn js-back" type="button">← back</button></div>
     <h2>Give a hint</h2>
-    <p class="lead">Fill this in like a letter. Nobody will see your exact words — they'll receive warm, anonymous-feeling hints, and you'll get to check them first.</p>
+    <p class="lead">Fill this in like a letter. Nobody will see your wishes word-for-word — they'll receive warm, anonymous-feeling hints, and you'll get to check them first. Only the optional note at the end goes out exactly as you write it.</p>
 
     <form id="form-give" novalidate>
       <!-- honeypot (bots fill it, humans never see it) -->
@@ -483,21 +461,16 @@
       </div>
 
       <div class="field">
-        <label id="wishes-label">Your wishes</label>
-        <p class="hint-text" style="margin-bottom:18px">Choose a tab: <strong>Hints &amp; Surprises</strong> for things the AI will rephrase into gentle clues, or <strong>Exact Wishes</strong> for things you want delivered word-for-word. At least one tab needs content.</p>
-        <div class="tabs" role="tablist" aria-labelledby="wishes-label">
-          <button class="tab" type="button" role="tab" data-section="hints" aria-selected="true">Hints &amp; Surprises <span class="count"></span></button>
-          <button class="tab" type="button" role="tab" data-section="exact" aria-selected="false">Exact Wishes <span class="count"></span></button>
-        </div>
+        <label for="wishes">Your wishes</label>
+        <p class="hint-text" style="margin-bottom:6px">Write exactly what you want — brands, models, sizes, the lot, one wish per line. The AI rephrases everything into gentle, brand-free hints, so the surprise stays alive.</p>
         <div class="inspire-tags" id="inspire-tags"></div>
-        <textarea id="wishes" aria-label="Wishes for the selected section" placeholder="e.g. new running socks…"></textarea>
-        <p class="hint-text" id="section-desc" style="margin-top:6px"></p>
+        <textarea id="wishes" placeholder="e.g. Nike Pegasus 41 running shoes size 42, Le Creuset Dutch oven in Marseille blue, Kindle Paperwhite…"></textarea>
       </div>
 
       <div class="field">
-        <label for="give-notes">Special notes</label>
-        <p class="hint-text">Optional — the only part that may stay empty. Added to the email word-for-word, as a personal note at the end; this part is <em>not</em> masked.</p>
-        <textarea id="give-notes" class="small" placeholder="e.g. Please, no scented candles this year 🙂"></textarea>
+        <label for="give-notes">Anything specific? <span style="font-weight:400">(optional)</span></label>
+        <p class="hint-text">A personal note at the end of the email, sent <strong>word-for-word</strong> — this part is <em>not</em> masked. Good for a wish that doesn't need to be a surprise, or anything your people should know.</p>
+        <textarea id="give-notes" class="small" placeholder="e.g. Please, no scented candles this year 🙂&#10;The one book I'd love: Brave New World by Aldous Huxley"></textarea>
       </div>
 
       <div class="notice error hidden" id="give-error"></div>
@@ -512,7 +485,7 @@
   <section id="view-preview" class="hidden">
     <div class="back-row"><button class="link-btn" id="preview-back" type="button">← edit wishes</button></div>
     <h2>Check the hints</h2>
-    <p class="lead">This is exactly what your people will receive — your original words stay private. Edit or remove any hint; every section needs at least one.</p>
+    <p class="lead">This is exactly what your people will receive — your original words stay private. Edit, add or remove any hint — just keep at least one.</p>
 
     <div id="preview-sections"></div>
 
@@ -626,30 +599,17 @@
   "use strict";
 
   /* ---------- state ---------- */
-  var sections = { hints:"", exact:"" };
-  var activeSection = "hints";
   var emails = [];
   var MAX_EMAILS = 20;
   var previewIsDemo = false;
-
-  var SECTION_TITLES = { hints:"Hints & Surprises", exact:"Exact Wishes" };
-  var sectionDesc = {
-    hints: "Write exactly what you want — brands, models, sizes, the lot. The AI will rephrase everything into gentle, brand-free hints so the surprise stays alive.",
-    exact: "Specific items you want exactly as described — a book title, a model number, a size. These go straight to your people, untouched."
-  };
-  var sectionPlaceholders = {
-    hints: "e.g. Nike Pegasus 41 running shoes size 42, Le Creuset Dutch oven in Marseille blue, Kindle Paperwhite\u2026",
-    exact: "e.g. Sony WH-1000XM5 headphones, Brave New World by Aldous Huxley\u2026"
-  };
+  var maskBrands = [];   // brand names Gemini found — sent back so the server can re-check edited hints
 
   /* ---------- inspiration tags ---------- */
-  var inspireTags = {
-    hints: ["needs", "wants", "likes", "craves", "dreams of", "is into", "enjoys", "hobbies"]
-  };
-  function renderInspireTags(sec){
+  var inspireTags = ["needs", "wants", "likes", "craves", "dreams of", "is into", "enjoys", "hobbies"];
+  function renderInspireTags(){
     var wrap = $("inspire-tags");
     wrap.innerHTML = "";
-    (inspireTags[sec] || []).forEach(function(tag){
+    inspireTags.forEach(function(tag){
       var btn = document.createElement("button");
       btn.type = "button"; btn.className = "inspire-tag"; btn.textContent = tag;
       btn.addEventListener("click", function(){
@@ -657,8 +617,6 @@
         var prefix = w.value.length && !w.value.endsWith("\n") ? "\n" : "";
         w.value += prefix + tag + ": ";
         w.focus();
-        sections[activeSection] = w.value;
-        updateCounts();
       });
       wrap.appendChild(btn);
     });
@@ -748,50 +706,18 @@
   });
   emailInput.addEventListener("blur", tryAddEmail);
 
-  /* ---------- tabs ---------- */
+  /* ---------- wishes ---------- */
   var wishes = $("wishes");
-  var tabs = document.querySelectorAll(".tab");
+  renderInspireTags();
 
-  function updateCounts(){
-    Array.prototype.forEach.call(tabs, function(t){
-      var sec = t.getAttribute("data-section");
-      var n = sections[sec].split("\n").filter(function(l){ return l.trim(); }).length;
-      t.querySelector(".count").textContent = n ? "(" + n + ")" : "";
-    });
-  }
-  function selectTab(sec){
-    sections[activeSection] = wishes.value;      // save current before switching
-    activeSection = sec;
-    wishes.value = sections[sec];                // restore target
-    wishes.placeholder = sectionPlaceholders[sec] || "";
-    Array.prototype.forEach.call(tabs, function(t){
-      t.setAttribute("aria-selected", String(t.getAttribute("data-section") === sec));
-    });
-    $("section-desc").textContent = sectionDesc[sec];
-    renderInspireTags(sec);
-    updateCounts();
-    wishes.focus();
-  }
-  Array.prototype.forEach.call(tabs, function(t){
-    t.addEventListener("click", function(){ selectTab(t.getAttribute("data-section")); });
-  });
-  wishes.addEventListener("input", function(){ sections[activeSection] = wishes.value; updateCounts(); });
-
-  // initialise first tab
-  $("section-desc").textContent = sectionDesc.hints;
-  wishes.placeholder = sectionPlaceholders.hints;
-  renderInspireTags("hints");
-
-  /* ---------- validation (at least one item total across both tabs) ---------- */
+  /* ---------- validation ---------- */
   function giveValidationError(){
     var name = $("give-name").value.trim();
     var senderEmail = $("give-sender-email").value.trim();
     if(name.length < 2) return "Please write your name — your people should know who the hints are from.";
     if(!isEmail(senderEmail)) return "Add your email — we send you a confirmation link before anything goes out.";
     if(emails.length === 0) return "Add at least one email address to send the hints to.";
-    if(!sections.hints.trim() && !sections.exact.trim()){
-      return "Write at least one wish — either in Hints & Surprises or in Exact Wishes. Both tabs can't be empty.";
-    }
+    if(!wishes.value.trim()) return "Write at least one wish — the AI turns it into a gentle hint.";
     return null;
   }
 
@@ -801,7 +727,7 @@
       senderEmail: $("give-sender-email").value.trim().toLowerCase(),
       recipients: emails,
       occasion: $("give-occasion").value,
-      sections: { hints:sections.hints.trim(), exact:sections.exact.trim() },
+      sections: { hints:wishes.value.trim() },
       specialNotes: $("give-notes").value.trim(),
       website: document.querySelector("#form-give [name=website]").value // honeypot
     };
@@ -811,7 +737,6 @@
   $("form-give").addEventListener("submit", function(e){
     e.preventDefault();
     setError("give-error", null);
-    sections[activeSection] = wishes.value;
     tryAddEmail(); // capture a typed-but-unconfirmed email
 
     var problem = giveValidationError();
@@ -820,9 +745,7 @@
     var btn = $("give-preview-btn");
     btn.disabled = true;
     var original = btn.textContent;
-    btn.textContent = sections.hints.trim()
-      ? "Turning wishes into hints…"
-      : "Preparing your wishes…";
+    btn.textContent = "Turning wishes into hints…";
 
     fetch("/api/mask", {
       method:"POST",
@@ -833,6 +756,7 @@
       return res.json();
     }).then(function(data){
       previewIsDemo = false;
+      maskBrands = data.brands || [];
       $("preview-note").classList.add("hidden");
       renderPreview(data.hints);
       show("view-preview");
@@ -844,8 +768,7 @@
         note.textContent = "Preview mode: the backend isn't connected yet, so these are example hints — once deployed, your real wishes are masked here.";
         note.classList.remove("hidden");
         renderPreview({
-          hints: ["(example) Warm socks for winter runs", "(example) Something for a slow coffee-lover's morning"],
-          exact: ["(example) Sony WH-1000XM5", "(example) Brave New World by Aldous Huxley"]
+          hints: ["(example) Warm socks for winter runs", "(example) Something for a slow coffee-lover's morning"]
         });
         show("view-preview");
       } else {
@@ -864,10 +787,8 @@
     setError("preview-error", null);
 
     var secs = [
-      { key:"hints", title:"Hints & Surprises", bullet:"✦", bulletClass:"star",
-        sub:"These are AI-generated hints — the exact wishes stay private." },
-      { key:"exact", title:"Exact Wishes", bullet:"✓", bulletClass:"check",
-        sub:"These are exactly what was asked for — no rephrasing." }
+      { key:"hints", title:"Your hints", bullet:"✦", bulletClass:"star",
+        sub:"These are AI-generated hints — the exact wishes stay private." }
     ];
 
     secs.forEach(function(sec){
@@ -877,7 +798,6 @@
       var block = document.createElement("div");
       var h = document.createElement("h3");
       h.className = "section-title";
-      if(sec.key === "exact") h.style.color = "#5a7a4a";
       h.textContent = sec.title;
       block.appendChild(h);
 
@@ -894,7 +814,7 @@
 
       var add = document.createElement("button");
       add.type = "button"; add.className = "add-hint";
-      add.textContent = sec.key === "hints" ? "+ add a hint" : "+ add a wish";
+      add.textContent = "+ add a hint";
       add.addEventListener("click", function(){
         var row = hintRow("", sec.bullet, sec.bulletClass);
         list.appendChild(row);
@@ -923,22 +843,20 @@
   }
 
   function collectHints(){
-    var out = { hints:[], exact:[] };
-    ["hints","exact"].forEach(function(sec){
-      out[sec] = Array.prototype.map.call(
-        document.querySelectorAll('[data-list="' + sec + '"] input'),
+    return {
+      hints: Array.prototype.map.call(
+        document.querySelectorAll('[data-list="hints"] input'),
         function(i){ return i.value.trim(); }
-      ).filter(Boolean);
-    });
-    return out;
+      ).filter(Boolean)
+    };
   }
 
   /* ---------- step 2 → send (after confirmation email) ---------- */
   $("preview-send").addEventListener("click", function(){
     setError("preview-error", null);
     var hints = collectHints();
-    if(hints.hints.length === 0 && hints.exact.length === 0){
-      setError("preview-error", "There are no hints or wishes left — you need at least one.");
+    if(hints.hints.length === 0){
+      setError("preview-error", "There are no hints left — you need at least one.");
       return;
     }
     if(previewIsDemo){
@@ -948,6 +866,7 @@
 
     var payload = givePayload();
     payload.hints = hints;
+    payload.brands = maskBrands;
 
     send("/api/give-hint", payload, $("preview-send"), "preview-error", function(){
       $("postmark-word").textContent = "Almost!";
@@ -964,8 +883,7 @@
   function resetGive(){
     $("form-give").reset();
     emails = []; renderChips();
-    sections = { hints:"", exact:"" };
-    selectTab("hints");
+    maskBrands = [];
   }
 
   /* ---------- submit: get a hint ---------- */

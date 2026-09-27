@@ -1,14 +1,14 @@
 // api/give-hint.js  (Vercel serverless function)
 // Step 2 of the give flow (after the on-page preview).
 // FAIL-SAFE pipeline — if ANY step fails, NOTHING is sent to recipients:
-//   1. strict validation (at least one item across hints/exact)
-//   2. scrub edited hints again (no brand/model may leak back in) — exact bypasses scrub
+//   1. strict validation (at least one wish / hint)
+//   2. re-check edited hints (no brand/model may leak back in)
 //   3. blocklist check (Supabase required — no storage, no sending)
 //   4. store the submission as PENDING with a one-time token
 //   5. email a confirmation link to the sender — recipients get nothing yet.
 // Recipients receive the hints only in api/confirm.js, after the sender clicks.
 
-import { scrubAgainstRaw } from "../lib/gemini.js";
+import { checkHints } from "../lib/gemini.js";
 import { buildConfirmEmail, sendEmail } from "../lib/emails.js";
 import { insertRow, updateRows, blockedAmong } from "../lib/store.js";
 import { newToken } from "../lib/security.js";
@@ -27,14 +27,16 @@ export default async function handler(req, res) {
   const h = validateHints(b.hints);
   if (h.error) return res.status(400).json({ error: h.error });
 
-  // ---------- step 2: re-scrub edited hints (fail-safe against leaks) ----------
-  // Only the "hints" array is scrubbed — "exact" passes through untouched.
-  const hints = scrubAgainstRaw(v.sections, h.hints);
-  if (hints.hints.length === 0 && hints.exact.length === 0) {
+  // ---------- step 2: re-check edited hints (fail-safe against leaks) ----------
+  // `brands` comes from /api/mask (Gemini's brand list); the heuristic check runs regardless.
+  const { clean, leaks } = checkHints(v.sections.hints, h.hints.hints, b.brands);
+  if (leaks.length) {
+    const first = leaks[0];
     return res.status(422).json({
-      error: "After checking for leaked brands, no hints or wishes are left — please reword and try again."
+      error: `This hint still gives away “${first.word}”: “${first.hint}”. Please reword it (or remove it) — nothing was sent.`
     });
   }
+  const hints = { hints: clean, exact: [] };
 
   try {
     // ---------- step 3: blocklist ----------
@@ -52,8 +54,8 @@ export default async function handler(req, res) {
       sender_email: v.senderEmail,
       occasion: v.occasion,
       recipients,                    // jsonb
-      raw_sections: v.sections,      // jsonb — the private wishes { hints, exact }
-      masked_hints: hints,           // jsonb — what recipients will see { hints: [...], exact: [...] }
+      raw_sections: v.sections,      // jsonb — the private wishes { hints }
+      masked_hints: hints,           // jsonb — what recipients will see { hints: [...], exact: [] }
       special_notes: v.specialNotes || null,
       token,
       status: "pending",

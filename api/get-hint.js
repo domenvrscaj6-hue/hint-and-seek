@@ -3,7 +3,7 @@
 // friendly invite email that links back to the "Give a hint" form.
 // Fail-safe: validation → blocklist check → store → send; any failure = nothing sent.
 
-import { buildInviteEmail, sendEmail } from "../lib/emails.js";
+import { buildInviteEmail, sendEmail, unsubscribeHeaders } from "../lib/emails.js";
 import { insertRow, blockedAmong } from "../lib/store.js";
 import { unsubscribeUrl } from "../lib/security.js";
 import { OCCASIONS, EMAIL_RE } from "../lib/validate.js";
@@ -39,14 +39,15 @@ export default async function handler(req, res) {
     });
 
     const siteUrl = process.env.SITE_URL || `https://${req.headers.host}`;
+    const unsubUrl = unsubscribeUrl(siteUrl, targetEmail);
     const { subject, html } = buildInviteEmail({
       requesterName,
       requesterEmail,
       occasion,
       siteUrl,
-      unsubscribeUrl: unsubscribeUrl(siteUrl, targetEmail)
+      unsubscribeUrl: unsubUrl
     });
-    await sendEmail({ to: targetEmail, subject, html });
+    await sendEmail({ to: targetEmail, subject, html, headers: unsubscribeHeaders(unsubUrl) });
 
     return res.status(200).json({ ok: true });
   } catch (err) {
