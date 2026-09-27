@@ -6,6 +6,7 @@
 import { buildHintEmail, sendEmail } from "../lib/emails.js";
 import { selectRows, updateRows, blockedAmong } from "../lib/store.js";
 import { unsubscribeUrl } from "../lib/security.js";
+import { track } from "../lib/analytics.js";
 
 function page(title, message, ok) {
   return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
@@ -84,6 +85,7 @@ export default async function handler(req, res) {
     }
 
     await updateRows("hint_submissions", { token: `eq.${token}` }, { status: "sent", sent_count: sent });
+    await track("hints_sent", { occasion: sub.occasion, sent });
 
     const who = sent === 1 ? "1 person" : `${sent} people`;
     return res.status(200).send(page("The hints are on their way", `Your hints were just mailed to ${who}. Your exact wishes stay private — happy gifting! 🎁`, true));

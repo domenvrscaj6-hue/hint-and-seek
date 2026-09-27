@@ -14,6 +14,7 @@ import { insertRow, updateRows, blockedAmong } from "../lib/store.js";
 import { newToken } from "../lib/security.js";
 import { validateGiveBody, validateHints } from "../lib/validate.js";
 import { rateLimit } from "../lib/ratelimit.js";
+import { track, cleanCounts } from "../lib/analytics.js";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
@@ -81,6 +82,14 @@ export default async function handler(req, res) {
       throw mailErr;
     }
 
+    // Anonymous stats: how much the sender changed the AI hints (counts only).
+    await track("give_submitted", {
+      occasion: v.occasion,
+      recipients: recipients.length,
+      hints: hints.hints.length,
+      exact: hints.exact.length,
+      ...cleanCounts(b.editStats, ["generated", "kept", "edited", "deleted", "added"])
+    });
     return res.status(200).json({ ok: true, pendingFor: recipients.length });
   } catch (err) {
     console.error("[give-hint]", err);

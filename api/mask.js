@@ -6,6 +6,7 @@
 import { maskWishes } from "../lib/gemini.js";
 import { validateGiveBody } from "../lib/validate.js";
 import { rateLimit } from "../lib/ratelimit.js";
+import { track } from "../lib/analytics.js";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
@@ -24,6 +25,7 @@ export default async function handler(req, res) {
     if (v.sections.hints) {
       const masked = await maskWishes(v.sections.hints);
       if (!masked.length) {
+        await track("mask_failed", { occasion: v.occasion });
         return res.status(422).json({
           error: "We couldn't turn your hints into safe rephrases — try rephrasing them (one wish per line works best)."
         });
@@ -40,6 +42,7 @@ export default async function handler(req, res) {
         .slice(0, 10);
     }
 
+    await track("mask_ok", { occasion: v.occasion, hints: result.hints.length, exact: result.exact.length });
     return res.status(200).json({ ok: true, hints: result });
   } catch (err) {
     console.error("[mask]", err);

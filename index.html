@@ -687,6 +687,18 @@
       $(v).classList.toggle("hidden", v !== viewId);
     });
     window.scrollTo({top:0, behavior:"smooth"});
+    trackView(viewId);
+  }
+  /* anonymous page-view ping: no cookies, no personal data — just which view was opened */
+  var trafficSource = /[?&]flow=/.test(location.search) ? "invite" : "direct";
+  function trackView(viewId){
+    try {
+      fetch("/api/track", {
+        method:"POST", keepalive:true,
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({ view: viewId.replace("view-",""), source: trafficSource })
+      }).catch(function(){});
+    } catch(e){}
   }
   function isEmail(s){ return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(s); }
   function setError(id, msg){
@@ -711,6 +723,8 @@
     show("view-give");
   } else if(params.get("flow") === "get"){
     show("view-get");
+  } else {
+    trackView("view-landing");
   }
 
   /* ---------- email chips ---------- */
@@ -858,7 +872,9 @@
   });
 
   /* ---------- preview rendering & editing ---------- */
+  var generatedCount = 0;
   function renderPreview(hints){
+    generatedCount = (hints.hints || []).length;
     var wrap = $("preview-sections");
     wrap.innerHTML = "";
     setError("preview-error", null);
@@ -889,7 +905,11 @@
 
       var list = document.createElement("div");
       list.setAttribute("data-list", sec.key);
-      items.forEach(function(txt){ list.appendChild(hintRow(txt, sec.bullet, sec.bulletClass)); });
+      items.forEach(function(txt){
+        var row = hintRow(txt, sec.bullet, sec.bulletClass);
+        if(sec.key === "hints") row.querySelector("input").setAttribute("data-orig", txt);
+        list.appendChild(row);
+      });
       block.appendChild(list);
 
       var add = document.createElement("button");
@@ -933,6 +953,21 @@
     return out;
   }
 
+  /* anonymous counts of how the sender changed the AI hints (no text is sent) */
+  function editStats(){
+    var st = { generated:0, kept:0, edited:0, deleted:0, added:0 };
+    st.generated = generatedCount;
+    Array.prototype.forEach.call(document.querySelectorAll('[data-list="hints"] input'), function(i){
+      var v = i.value.trim(), orig = i.getAttribute("data-orig");
+      if(orig === null){ if(v) st.added++; }
+      else if(!v){ /* emptied → counts as deleted below */ }
+      else if(v === orig.trim()){ st.kept++; }
+      else { st.edited++; }
+    });
+    st.deleted = Math.max(0, st.generated - st.kept - st.edited);
+    return st;
+  }
+
   /* ---------- step 2 → send (after confirmation email) ---------- */
   $("preview-send").addEventListener("click", function(){
     setError("preview-error", null);
@@ -948,6 +983,7 @@
 
     var payload = givePayload();
     payload.hints = hints;
+    payload.editStats = editStats();
 
     send("/api/give-hint", payload, $("preview-send"), "preview-error", function(){
       $("postmark-word").textContent = "Almost!";

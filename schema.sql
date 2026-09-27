@@ -83,10 +83,66 @@ $$;
 revoke all on function hit_rate_limit(text, int, int) from public, anon, authenticated;
 
 -- ---------------------------------------------------------------------------
+-- Analytics (privacy-friendly, written by lib/analytics.js).
+-- No cookies, IPs, emails, names, wishes or hints — only an event name and
+-- a few counts/labels in props. Kept for 13 months (see cleanup below).
+-- Events: page_view {view, source}, mask_ok, mask_failed, give_submitted
+-- {recipients, hints, exact, generated, kept, edited, deleted, added},
+-- hints_sent {sent}, get_submitted, feedback_sent {type}.
+-- ---------------------------------------------------------------------------
+create table if not exists analytics_events (
+  id         bigint generated always as identity primary key,
+  created_at timestamptz not null default now(),
+  event      text not null,
+  props      jsonb not null default '{}'::jsonb
+);
+create index if not exists idx_analytics_created on analytics_events (created_at);
+alter table analytics_events enable row level security;
+
+-- Ready-made summaries — open them in Supabase → Table Editor (or SQL: select * from ...).
+-- security_invoker keeps them private like the tables underneath.
+
+-- How many of each event per day.
+create or replace view analytics_daily with (security_invoker = true) as
+select date_trunc('day', created_at)::date as day, event, count(*) as total
+from analytics_events
+group by 1, 2
+order by 1 desc, 2;
+
+-- Page views per day and view (landing, give, preview, get, success).
+create or replace view analytics_page_views with (security_invoker = true) as
+select date_trunc('day', created_at)::date as day,
+       props->>'view'   as view,
+       props->>'source' as source,
+       count(*) as views
+from analytics_events
+where event = 'page_view'
+group by 1, 2, 3
+order by 1 desc, 2, 3;
+
+-- How much senders change the AI hints, per week.
+-- edit_rate = share of AI hints that were edited or deleted before sending.
+create or replace view analytics_ai_edits with (security_invoker = true) as
+select date_trunc('week', created_at)::date as week,
+       count(*)                                  as submissions,
+       sum((props->>'generated')::int)           as ai_hints,
+       sum((props->>'kept')::int)                as kept,
+       sum((props->>'edited')::int)              as edited,
+       sum((props->>'deleted')::int)             as deleted,
+       sum((props->>'added')::int)               as added_by_hand,
+       round(100.0 * sum((props->>'edited')::int + (props->>'deleted')::int)
+             / nullif(sum((props->>'generated')::int), 0), 1) as edit_rate_pct
+from analytics_events
+where event = 'give_submitted'
+group by 1
+order by 1 desc;
+
+-- ---------------------------------------------------------------------------
 -- Cleanup job: runs every night at 03:17 UTC.
 --   * pending submissions whose 48 h link expired → deleted (they hold private wishes)
 --   * failed submissions older than 7 days        → deleted
 --   * rate-limit rows older than 1 day            → deleted
+--   * analytics events older than 13 months       → deleted
 -- Sent submissions are kept (they are the record of what was sent).
 -- Requires the pg_cron extension (free on Supabase; enabled by the line below,
 -- or via Dashboard → Database → Extensions → pg_cron).
@@ -102,6 +158,7 @@ as $$
   delete from hint_submissions where status = 'pending' and expires_at < now();
   delete from hint_submissions where status = 'failed'  and created_at < now() - interval '7 days';
   delete from rate_limits      where window_start < now() - interval '1 day';
+  delete from analytics_events where created_at   < now() - interval '13 months';
 $$;
 
 revoke all on function cleanup_old_rows() from public, anon, authenticated;

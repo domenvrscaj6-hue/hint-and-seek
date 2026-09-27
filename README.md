@@ -35,12 +35,14 @@ api/confirm.js       → potrditveni link → pošiljanje namigov prejemnikom
 api/get-hint.js      → pull tok: vabilo osebi, od katere želiš namige
 api/unsubscribe.js   → podpisan opt-out link → blocklist
 api/feedback.js      → povratne informacije uporabnikov → mail lastniku strani
+api/track.js         → anonimni ogledi strani (analitika)
 lib/gemini.js        → Gemini klic + scrub filter (namig ne sme razkriti znamke)
 lib/emails.js        → 3 tematske predloge (božič/rd/other) + vabilo + potrditveni mail + Resend
 lib/store.js         → Supabase (v tej verziji OBVEZEN — brez njega se nič ne pošlje)
 lib/security.js      → HMAC podpisi za unsubscribe, generiranje tokenov
 lib/validate.js      → stroga validacija (vse obvezno razen Special notes)
 lib/ratelimit.js     → omejitev zahtevkov na IP (števec v Supabase, IP samo kot hash)
+lib/analytics.js     → anonimna analitika v Supabase (brez piškotkov, IP-jev, mailov, želja)
 schema.sql           → tabele za Supabase
 HANDOVER.md          → dokument za nadaljevanje razvoja (zate in za AI asistente)
 ```
@@ -81,6 +83,20 @@ HANDOVER.md          → dokument za nadaljevanje razvoja (zate in za AI asisten
    - [ ] get tok: vabilo prispe, gumb odpre stran s pravilno priložnostjo
    - [ ] 11× zaporedoma "Preview" v eni uri → prijazno sporočilo "take a little break"
    - [ ] Supabase → Database → Cron Jobs: vidiš job `hint-seek-cleanup`
+   - [ ] Supabase → Table Editor → `analytics_daily`: po obisku strani vidiš `page_view`
+
+## Analitika (kje jo pogledaš)
+
+Supabase → **Table Editor** (ali SQL Editor: `select * from ...`):
+
+| Pogled | Kaj pokaže |
+|---|---|
+| `analytics_daily` | koliko je bilo vsakega dogodka na dan (ogledi, predogledi, oddaje, poslani namigi…) |
+| `analytics_page_views` | ogledi po dnevih in pogledih (`landing`, `give`, `preview`, `get`, `success`); `source = invite` pomeni, da je prišel iz vabila |
+| `analytics_ai_edits` | po tednih: koliko AI namigov je ostalo, koliko jih je bilo urejenih/izbrisanih, `edit_rate_pct` |
+
+Shranjujejo se samo imena dogodkov in števila — brez piškotkov, IP-jev, mailov, imen in besedil.
+Dogodki se samodejno brišejo po 13 mesecih.
 
 ## Znani TODO-ji za v2
 
