@@ -141,9 +141,11 @@ order by 1 desc;
 -- Cleanup job: runs every night at 03:17 UTC.
 --   * pending submissions whose 48 h link expired → deleted (they hold private wishes)
 --   * failed submissions older than 7 days        → deleted
+--   * raw wishes of sent/failed submissions       → erased (only needed until sending)
+--   * sent submissions + invite requests > 90 days → deleted
 --   * rate-limit rows older than 1 day            → deleted
 --   * analytics events older than 13 months       → deleted
--- Sent submissions are kept (they are the record of what was sent).
+-- These periods are promised in privacy.html — change both together.
 -- Requires the pg_cron extension (free on Supabase; enabled by the line below,
 -- or via Dashboard → Database → Extensions → pg_cron).
 -- ---------------------------------------------------------------------------
@@ -157,6 +159,10 @@ set search_path = public
 as $$
   delete from hint_submissions where status = 'pending' and expires_at < now();
   delete from hint_submissions where status = 'failed'  and created_at < now() - interval '7 days';
+  update hint_submissions set raw_sections = '{}'::jsonb
+    where status in ('sent','failed') and raw_sections <> '{}'::jsonb;
+  delete from hint_submissions where status = 'sent'    and created_at < now() - interval '90 days';
+  delete from hint_requests    where created_at < now() - interval '90 days';
   delete from rate_limits      where window_start < now() - interval '1 day';
   delete from analytics_events where created_at   < now() - interval '13 months';
 $$;

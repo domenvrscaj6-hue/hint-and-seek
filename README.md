@@ -29,6 +29,8 @@ prijazno vabilo z linkom nazaj na "Give a hint" (z že izbrano priložnostjo).
 
 ```
 index.html           → celoten frontend (HTML + CSS + JS v eni datoteki)
+privacy.html         → stran o zasebnosti (roki hrambe se ujemajo s čiščenjem v schema.sql)
+favicon.svg, apple-touch-icon.png, og-image.png → ikona strani in slika za predogled povezav
 api/mask.js          → želje → namigi (Gemini), za predogled
 api/give-hint.js     → validacija + shranjevanje pending + potrditveni mail pošiljatelju
 api/confirm.js       → potrditveni link → pošiljanje namigov prejemnikom
@@ -84,6 +86,15 @@ HANDOVER.md          → dokument za nadaljevanje razvoja (zate in za AI asisten
    - [ ] 11× zaporedoma "Preview" v eni uri → prijazno sporočilo "take a little break"
    - [ ] Supabase → Database → Cron Jobs: vidiš job `hint-seek-cleanup`
    - [ ] Supabase → Table Editor → `analytics_daily`: po obisku strani vidiš `page_view`
+   - [ ] noga strani → "Privacy, plainly" odpre stran o zasebnosti
+   - [ ] povezavo do strani pošlješ v WhatsApp/Messenger → prikaže se slika s pečatom
+7. **Prava domena** (ko jo kupiš):
+   - Vercel → Project → Settings → **Domains** → Add → vpiši domeno → pri registrarju nastavi
+     DNS zapise, ki ti jih pokaže Vercel.
+   - Vercel → Environment Variables → `SITE_URL` nastavi na `https://tvojadomena.com` → Redeploy.
+   - V `index.html` pri `og:image` spremeni `/og-image.png` v `https://tvojadomena.com/og-image.png`
+     (Facebook/WhatsApp potrebujeta polni naslov slike).
+   - Resend: dodaj isto domeno (SPF + DKIM) in posodobi `EMAIL_FROM`.
 
 ## Analitika (kje jo pogledaš)
 
