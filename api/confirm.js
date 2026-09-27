@@ -16,8 +16,16 @@ import { track } from "../lib/analytics.js";
 function page(title, message, mark, extra = "") {
   return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="robots" content="noindex">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <title>${title} — Hint &amp; Seek</title>
 <style>
+  .card{position:relative;}
+  .seal{position:absolute;top:-20px;right:-20px;width:62px;height:62px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;transform:rotate(10deg);
+    background:radial-gradient(circle at 36% 30%,#c0594d 0%,#a4443a 48%,#85352c 100%);
+    box-shadow:0 3px 8px rgba(0,0,0,.35);color:#fdf6e6;font-weight:bold;font-size:30px;line-height:1;}
+  .seal::before{content:"";position:absolute;inset:6px;border-radius:50%;border:1.5px solid rgba(110,40,33,.75);}
+  @media (max-width:560px){.seal{width:48px;height:48px;font-size:23px;top:-12px;right:-8px}}
   body{min-height:100vh;margin:0;display:flex;align-items:center;justify-content:center;
     font-family:Georgia,'Times New Roman',serif;background:#2e2318;padding:20px;}
   .card{max-width:520px;background:#f3ead7;border-radius:4px;padding:44px 40px;text-align:center;
@@ -32,7 +40,7 @@ function page(title, message, mark, extra = "") {
     font-family:inherit;font-size:19px;font-style:italic;padding:12px 34px;}
   button:disabled{opacity:.6;cursor:default;}
 </style></head><body>
-<div class="card">
+<div class="card"><div class="seal" aria-hidden="true">H</div>
   <div class="mark">${mark}</div>
   <h1>${title}</h1>
   <p>${message}</p>

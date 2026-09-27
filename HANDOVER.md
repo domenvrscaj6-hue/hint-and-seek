@@ -41,6 +41,13 @@ see only hints, so choosing the gift stays theirs and the surprise survives.
   - get form (requester name + email, target email, occasion)
   - success view
   - floating feedback widget (speech-bubble button → suggestion / bug / other)
+  - brand mark = red wax seal with a serif "H": `favicon.svg` (tab icon on every page, incl.
+    the confirm / unsubscribe pages rendered by `api/confirm.js` + `api/unsubscribe.js`),
+    `apple-touch-icon.png`, and a CSS seal on the corner of the sheet / cards
+  - while `/api/mask` runs, a progress bar eases to 92 % with changing status text
+    (`startProgress()` in `index.html`) and jumps to 100 % when the hints arrive
+  - Gemini is asked for the lowest thinking level (`thinkingConfigFor()` in `lib/gemini.js`) —
+    "thinking" is most of the wait; a model that rejects the setting is retried without it
   - icons are an inline SVG sprite (`<symbol>`s at the top of `<body>`), no emoji in the UI;
     views fade in on switch, the success postmark "stamps" down (both off with
     `prefers-reduced-motion`); a tiny head script hides the sheet until fonts load (max 1.2 s)

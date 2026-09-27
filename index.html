@@ -443,6 +443,46 @@
     *{animation:none!important;transition:none!important}
   }
 
+  /* ---------- wax seal on the sheet corner ---------- */
+  .sheet > .sheet-seal{
+    position:absolute;top:-22px;right:-22px;z-index:2;
+    width:70px;height:70px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(circle at 36% 30%, #c0594d 0%, #a4443a 48%, #85352c 100%);
+    box-shadow:0 3px 8px rgba(0,0,0,.35), inset 0 -2px 4px rgba(0,0,0,.18);
+    color:var(--seal-ink);
+    font-family:'EB Garamond',Georgia,serif;font-weight:600;font-size:34px;line-height:1;
+    text-shadow:0 1px 0 rgba(0,0,0,.25);
+    transform:rotate(10deg);
+    pointer-events:none;
+  }
+  .sheet-seal::before{ /* pressed inner ring */
+    content:"";position:absolute;inset:7px;border-radius:50%;
+    border:1.5px solid rgba(110,40,33,.75);
+  }
+  @media (max-width:560px){
+    .sheet > .sheet-seal{width:52px;height:52px;font-size:25px;top:-14px;right:-8px}
+    .sheet-seal::before{inset:5px}
+  }
+
+  /* ---------- progress while the AI writes the hints ---------- */
+  .progress{max-width:340px;margin:18px auto 0;text-align:center}
+  .progress-track{
+    height:8px;border-radius:6px;overflow:hidden;
+    background:var(--chip);border:1px solid var(--rule);
+  }
+  .progress-fill{
+    height:100%;width:0;border-radius:6px;
+    background:
+      repeating-linear-gradient(-45deg, rgba(255,255,255,.18) 0 8px, transparent 8px 16px),
+      var(--seal);
+    background-size:22.6px 100%, auto;
+    animation:progressStripes .8s linear infinite;
+    transition:width .3s ease;
+  }
+  @keyframes progressStripes{to{background-position:22.6px 0, 0 0}}
+  .progress-text{margin-top:8px;font-size:15px;font-style:italic;color:var(--ink-soft)}
+
   /* ---------- notices ---------- */
   .notice{
     margin-top:22px;
@@ -578,6 +618,7 @@
 </svg>
 
 <main class="sheet" id="sheet">
+  <div class="sheet-seal" aria-hidden="true">H</div>
 
   <!-- ============ VIEW: LANDING ============ -->
   <section id="view-landing">
@@ -707,6 +748,10 @@
 
       <div class="btn-row">
         <button class="stamp-btn" id="give-preview-btn" type="submit">Preview the hints</button>
+      </div>
+      <div class="progress hidden" id="mask-progress" role="status" aria-live="polite">
+        <div class="progress-track"><div class="progress-fill" id="mask-progress-fill"></div></div>
+        <p class="progress-text" id="mask-progress-text"></p>
       </div>
     </form>
   </section>
@@ -1009,6 +1054,7 @@
     btn.disabled = true;
     var original = btn.textContent;
     btn.textContent = "Turning wishes into hints…";
+    var progress = startProgress();
 
     fetch("/api/mask", {
       method:"POST",
@@ -1022,8 +1068,9 @@
       maskBrands = data.brands || [];
       $("preview-note").classList.add("hidden");
       renderPreview(data.hints);
-      show("view-preview");
+      return progress.finish().then(function(){ show("view-preview"); });
     }).catch(function(err){
+      progress.stop();
       if(err instanceof TypeError){
         // static preview without the backend → show example hints
         previewIsDemo = true;
@@ -1038,10 +1085,49 @@
         setError("give-error", err.message);
       }
     }).finally(function(){
+      progress.stop();
       btn.disabled = false;
       btn.textContent = original;
     });
   });
+
+  /* ---------- progress bar while /api/mask runs ----------
+     We can't know how long the AI takes, so the bar eases towards 92 %
+     and jumps to 100 % when the answer arrives. */
+  var PROGRESS_STEPS = [
+    [0,     "Reading your wishes…"],
+    [2500,  "Hiding brands and models…"],
+    [6000,  "Thinking of gentle hints…"],
+    [12000, "Almost there — polishing the wording…"],
+    [22000, "Still working — the AI is a little busy right now…"]
+  ];
+  function startProgress(){
+    var box = $("mask-progress"), fill = $("mask-progress-fill"), text = $("mask-progress-text");
+    var t0 = Date.now();
+    fill.style.width = "0%";
+    box.classList.remove("hidden");
+    function tick(){
+      var t = Date.now() - t0;
+      fill.style.width = (92 * (1 - Math.exp(-t / 7000))).toFixed(1) + "%";
+      var msg = PROGRESS_STEPS[0][1];
+      PROGRESS_STEPS.forEach(function(s){ if(t >= s[0]) msg = s[1]; });
+      if(text.textContent !== msg) text.textContent = msg;
+    }
+    tick();
+    var timer = setInterval(tick, 200);
+    return {
+      finish: function(){
+        clearInterval(timer);
+        fill.style.width = "100%";
+        text.textContent = "Done!";
+        return new Promise(function(r){ setTimeout(r, 350); });
+      },
+      stop: function(){
+        clearInterval(timer);
+        box.classList.add("hidden");
+      }
+    };
+  }
 
   /* ---------- preview rendering & editing ---------- */
   var generatedCount = 0;
