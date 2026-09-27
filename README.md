@@ -35,7 +35,7 @@ oseba dobi prijazno vabilo z linkom nazaj na "Give a hint". V obrazcu je prilož
 
 ## Povratne informacije
 
-Plavajoči gumb 💬 spodaj desno odpre obrazec (predlog / napaka / drugo) →
+Plavajoči gumb z oblačkom spodaj desno odpre obrazec (predlog / napaka / drugo) →
 `POST /api/feedback` → sporočilo pride po mailu na `FEEDBACK_TO` (ali `EMAIL_FROM`).
 
 ## Struktura projekta

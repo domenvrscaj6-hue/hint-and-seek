@@ -31,13 +31,19 @@ see only hints, so choosing the gift stays theirs and the surprise survives.
 ## 2. Current state (September 2026) — DONE
 
 - Vintage "old paper on a wooden desk" single-page frontend (`index.html`):
-  - landing choice (Give / Get) + 3-step "how it works" strip
-  - give form: name, sender email, recipient chips, occasion, one wishes box with
-    inspiration tags, optional "Anything specific?" note
+  - landing choice cards (Give / Get) + on-sheet "how it works" (3 numbered stamps)
+    and a before → after example of a masked wish
+  - give form in two groups ("From you, to them" / "What you wish for"): name + sender
+    email side by side, recipient chips, occasion, one wishes box with "+" inspiration
+    tags, optional "Anything specific?" note
   - preview step with inline editing (add / edit / delete) of the hints
   - get form (requester name + email, target email, occasion)
   - success view
-  - floating feedback widget (💬 → suggestion / bug / other)
+  - floating feedback widget (speech-bubble button → suggestion / bug / other)
+  - icons are an inline SVG sprite (`<symbol>`s at the top of `<body>`), no emoji in the UI;
+    views fade in on switch, the success postmark "stamps" down (both off with
+    `prefers-reduced-motion`); a tiny head script hides the sheet until fonts load (max 1.2 s)
+  - meta description, `theme-color`, OG/Twitter tags; share image `og-image.png` (1200×630)
   - works as a static preview without backend ("preview mode")
 - Backend (Vercel serverless, zero npm dependencies, plain `fetch` everywhere):
   - `api/mask.js` — wishes → Gemini → hints (+ brand list)
@@ -173,6 +179,7 @@ are currently NOT a priority.)
 - The user is not a professional developer: explain changes simply, give exact
   copy-paste commands, and prefer small verifiable steps.
 
+<<<<<<< HEAD
 ### Working in parallel sessions (the user often runs 2–3 AI sessions at once)
 
 Several sessions have already built the same feature twice on separate branches
@@ -236,3 +243,40 @@ Several sessions have already built the same feature twice on separate branches
   headless Chromium and local Postgres. A small zero-dependency `node --test` suite would help.
 - PR #4 (`happy-turing`, visual polish of `index.html`) was open at the end of this session. It
   merges cleanly with `main` and with #5; merge the two one at a time.
+=======
+## 9. Session log
+
+### Sep 27, 2026 — branch `claude/epic-hopper-5z37sw` (PR #1, merged)
+
+**Done**
+- Phase 1: per-IP rate limiting and the nightly cleanup job.
+- Phase 3: analytics, `privacy.html`, icons, OG image and meta tags on `www.hintandseek.com`.
+- Retention periods added to the cleanup job, matching `privacy.html`.
+- Fixed the missing `hint_requests.requester_email` column.
+- Merged main after #2 and resolved the conflicts.
+
+**Decisions (and why)**
+- Rate limiting and analytics live in Supabase, not Upstash or a third-party tool.
+  Supabase is already required, and the zero-dependency / zero-ops rule applies.
+- The rate limiter fails open. It only guards against abuse; the real fail-safes
+  (storage, blocklist, sender confirmation) are untouched.
+- Analytics store only event names and counts: no cookies, IPs, emails or text.
+  AI edit counts are computed in the browser and sanitized on the server.
+- Raw wishes are erased once sent. Sent submissions and invite requests are deleted
+  after 90 days. Nothing needed the data after sending, and the privacy page must be honest.
+- The privacy page says the Gemini API is on the paid plan, so the text is not used for
+  training. The owner confirmed this.
+
+**Left open**
+- `privacy.html` still needs the operator's name and a contact email (GDPR). The owner
+  has not provided them yet, so the page points to the 💬 feedback button.
+- Owner actions:
+  - re-run `schema.sql` in Supabase and check the `hint-seek-cleanup` cron job;
+  - check `SITE_URL` and `EMAIL_FROM` in Vercel;
+  - run the README checklist on the live site.
+- The pg_cron job was not tested outside Supabase (not available locally).
+- Lesson: three sessions ran in parallel on the same files (`index.html`, README,
+  HANDOVER). That caused conflicts and duplicated work, e.g. the OG domain was done
+  twice. Give each session its own area, merge PRs one at a time, and have every
+  session pull the latest `main` first.
+>>>>>>> origin/claude/epic-hopper-5z37sw
