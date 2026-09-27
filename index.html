@@ -4,7 +4,22 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Hint &amp; Seek — gift hints, the old-fashioned way</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23f3ead7'/%3E%3C!-- envelope body --%3E%3Crect x='4' y='9' width='24' height='16' rx='2' fill='%23e6d9bd' stroke='%23c4b496' stroke-width='.8'/%3E%3C!-- envelope flap --%3E%3Cpath d='M4 11 L16 19 L28 11' fill='none' stroke='%23c4b496' stroke-width='.8' stroke-linejoin='round'/%3E%3Cpath d='M4 9 L16 18 L28 9 Z' fill='%23efe4c9' stroke='%23c4b496' stroke-width='.8' stroke-linejoin='round'/%3E%3C!-- paper peeking out --%3E%3Crect x='9' y='5' width='14' height='14' rx='1' fill='%23faf5ea' stroke='%23d8c9a8' stroke-width='.6'/%3E%3C!-- paper lines --%3E%3Cline x1='11' y1='8' x2='21' y2='8' stroke='%23d8c9a8' stroke-width='.5'/%3E%3Cline x1='11' y1='10.5' x2='21' y2='10.5' stroke='%23d8c9a8' stroke-width='.5'/%3E%3Cline x1='11' y1='13' x2='18' y2='13' stroke='%23d8c9a8' stroke-width='.5'/%3E%3C!-- wax seal --%3E%3Ccircle cx='16' cy='22' r='4.5' fill='%23a4443a'/%3E%3Ccircle cx='16' cy='22' r='3.2' fill='none' stroke='%237e332b' stroke-width='.5'/%3E%3Ctext x='16' y='23.8' text-anchor='middle' font-size='5' font-weight='bold' font-family='serif' fill='%23fdf6e6'%3EH%3C/text%3E%3C/svg%3E">
+<meta name="description" content="Gift hints without spoiling the surprise. Write your wishes, AI turns them into gentle hints, and only the people you choose receive them.">
+<meta name="theme-color" content="#2e2318">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<!-- Link previews (WhatsApp, Messenger, Slack…) need absolute URLs — update them if the domain changes -->
+<link rel="canonical" href="https://www.hintandseek.com/">
+<meta property="og:url" content="https://www.hintandseek.com/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Hint &amp; Seek">
+<meta property="og:title" content="Hint &amp; Seek — gift hints, the old-fashioned way">
+<meta property="og:description" content="Gift hints without spoiling the surprise. Wishes in, gentle hints out.">
+<meta property="og:image" content="https://www.hintandseek.com/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Hint &amp; Seek — a paper letter with a red wax seal">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
@@ -277,6 +292,7 @@
     text-align:center;line-height:1.6;max-width:520px;
   }
   footer a{color:inherit}
+  footer .footer-link{display:inline-block;margin-top:10px;font-style:normal;font-size:15px;letter-spacing:.04em;color:#e6d9bd}
 
   /* ---------- 3-step strip ---------- */
   .steps-strip{
@@ -577,6 +593,7 @@
 <footer>
   Hint &amp; Seek never shows your exact wishes to gift-givers. Recipient emails are used only for delivery,
   and every email includes a one-click way to opt out of future notes.
+  <br><a class="footer-link" href="/privacy.html">Privacy policy</a>
 </footer>
 
 <!-- feedback widget -->
@@ -645,6 +662,18 @@
       $(v).classList.toggle("hidden", v !== viewId);
     });
     window.scrollTo({top:0, behavior:"smooth"});
+    trackView(viewId);
+  }
+  /* anonymous page-view ping: no cookies, no personal data — just which view was opened */
+  var trafficSource = /[?&]flow=/.test(location.search) ? "invite" : "direct";
+  function trackView(viewId){
+    try {
+      fetch("/api/track", {
+        method:"POST", keepalive:true,
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({ view: viewId.replace("view-",""), source: trafficSource })
+      }).catch(function(){});
+    } catch(e){}
   }
   function isEmail(s){ return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(s); }
   function setError(id, msg){
@@ -669,6 +698,8 @@
     show("view-give");
   } else if(params.get("flow") === "get"){
     show("view-get");
+  } else {
+    trackView("view-landing");
   }
 
   /* ---------- email chips ---------- */
@@ -781,7 +812,9 @@
   });
 
   /* ---------- preview rendering & editing ---------- */
+  var generatedCount = 0;
   function renderPreview(hints){
+    generatedCount = (hints.hints || []).length;
     var wrap = $("preview-sections");
     wrap.innerHTML = "";
     setError("preview-error", null);
@@ -809,7 +842,11 @@
 
       var list = document.createElement("div");
       list.setAttribute("data-list", sec.key);
-      items.forEach(function(txt){ list.appendChild(hintRow(txt, sec.bullet, sec.bulletClass)); });
+      items.forEach(function(txt){
+        var row = hintRow(txt, sec.bullet, sec.bulletClass);
+        if(sec.key === "hints") row.querySelector("input").setAttribute("data-orig", txt);
+        list.appendChild(row);
+      });
       block.appendChild(list);
 
       var add = document.createElement("button");
@@ -851,6 +888,21 @@
     };
   }
 
+  /* anonymous counts of how the sender changed the AI hints (no text is sent) */
+  function editStats(){
+    var st = { generated:0, kept:0, edited:0, deleted:0, added:0 };
+    st.generated = generatedCount;
+    Array.prototype.forEach.call(document.querySelectorAll('[data-list="hints"] input'), function(i){
+      var v = i.value.trim(), orig = i.getAttribute("data-orig");
+      if(orig === null){ if(v) st.added++; }
+      else if(!v){ /* emptied → counts as deleted below */ }
+      else if(v === orig.trim()){ st.kept++; }
+      else { st.edited++; }
+    });
+    st.deleted = Math.max(0, st.generated - st.kept - st.edited);
+    return st;
+  }
+
   /* ---------- step 2 → send (after confirmation email) ---------- */
   $("preview-send").addEventListener("click", function(){
     setError("preview-error", null);
@@ -866,6 +918,7 @@
 
     var payload = givePayload();
     payload.hints = hints;
+    payload.editStats = editStats();
     payload.brands = maskBrands;
 
     send("/api/give-hint", payload, $("preview-send"), "preview-error", function(){

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Privacy — Hint &amp; Seek</title>
+<meta name="description" content="What Hint & Seek stores, why, and for how long. Short and plain.">
+<link rel="canonical" href="https://www.hintandseek.com/privacy.html">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#f3ead7; --ink:#3a2c1c; --ink-soft:#5c4a33; --pencil:#8b8070;
+    --seal:#a4443a; --rule:#d8c9a8; --desk:#2e2318;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    min-height:100vh;font-family:'EB Garamond',Georgia,'Times New Roman',serif;color:var(--ink);
+    background:linear-gradient(180deg,#3d2e1e 0%,#2e2318 40%,#251c12 100%);
+    display:flex;flex-direction:column;align-items:center;padding:40px 16px 64px;
+  }
+  .sheet{
+    width:100%;max-width:660px;background:var(--paper);border-radius:3px 5px 4px 6px;
+    box-shadow:0 1px 2px rgba(0,0,0,.35),0 12px 34px rgba(0,0,0,.45),inset 0 0 90px rgba(120,90,40,.14);
+    padding:44px 46px 52px;
+  }
+  @media (max-width:560px){ .sheet{padding:34px 22px 42px} }
+  h1{font-family:'Caveat',cursive;font-size:46px;line-height:1.1;color:var(--ink);margin-bottom:6px}
+  .lead{font-size:18px;font-style:italic;color:var(--ink-soft);margin-bottom:26px;line-height:1.5}
+  h2{font-size:15px;letter-spacing:.14em;text-transform:uppercase;color:var(--seal);
+     margin:28px 0 8px;padding-top:18px;border-top:1px dashed var(--rule)}
+  p,li{font-size:17px;line-height:1.6;color:var(--ink-soft)}
+  ul{margin:6px 0 0 20px}
+  li{margin-bottom:6px}
+  strong{color:var(--ink)}
+  a{color:var(--seal)}
+  .back{display:inline-block;margin-top:32px;font-size:16px}
+  .updated{margin-top:26px;font-size:14px;color:var(--pencil);font-style:italic}
+</style>
+</head>
+<body>
+<main class="sheet">
+  <h1>Privacy, plainly</h1>
+  <p class="lead">Hint &amp; Seek exists to keep your wishes private. Here is exactly what we store, why, and for how long.</p>
+
+  <h2>What we store</h2>
+  <ul>
+    <li><strong>When you give hints:</strong> your name, your email, your recipients' emails, the occasion,
+      your optional note, your wishes and the hints you approved.</li>
+    <li><strong>When you ask someone for hints:</strong> your name, your email, their email and the occasion.</li>
+    <li><strong>When someone opts out:</strong> only their email address, so we never write to them again.</li>
+    <li><strong>Anonymous usage counts:</strong> which pages are opened and how many hints get edited —
+      no cookies, no IP addresses, no emails, no names and no text.</li>
+  </ul>
+
+  <h2>Why</h2>
+  <ul>
+    <li>Your email: to send you the confirmation link. Nothing reaches your recipients before you click it.</li>
+    <li>Recipients' emails: only to deliver the hints (or the invite) and to respect opt-outs.</li>
+    <li>Your wishes: only to turn them into hints. Your recipients never see your wishes — only the hints
+      you approved and, if you add one, your optional note, which is sent word for word.</li>
+  </ul>
+  <p style="margin-top:10px">We never sell data, never show ads and never add anyone to a mailing list.</p>
+
+  <h2>How long</h2>
+  <ul>
+    <li>Your original wishes are erased within a day after the hints are sent (or the confirmation link expires).</li>
+    <li>Unconfirmed submissions are deleted once their 48-hour link expires.</li>
+    <li>Sent hints and invite requests are deleted after 90 days.</li>
+    <li>Anonymous usage counts are deleted after 13 months.</li>
+    <li>Opt-outs are kept for as long as the service runs — that's how we keep the promise.</li>
+  </ul>
+
+  <h2>Who helps us run it</h2>
+  <ul>
+    <li><strong>Google (Gemini API)</strong> rewrites your wishes into hints.
+      It receives the wish text only — never names, email addresses or your note. We use Google's paid API,
+      so Google does not use this text to train or improve its models.</li>
+    <li><strong>Supabase</strong> stores the data listed above.</li>
+    <li><strong>Resend</strong> delivers the emails.</li>
+    <li><strong>Vercel</strong> hosts the website.</li>
+    <li><strong>Google Fonts</strong> serves the typefaces, so your browser connects to Google when the page loads.</li>
+  </ul>
+
+  <h2>Cookies</h2>
+  <p>None. The site sets no cookies and uses no tracking scripts.</p>
+
+  <h2>Your choices</h2>
+  <ul>
+    <li>Every email we send has a one-click link to never receive Hint &amp; Seek emails again.</li>
+    <li>If you'd like your data removed sooner, or have a question, write to us with the 💬 button
+      on the main page.</li>
+  </ul>
+
+  <p class="updated">Last updated: September 2026</p>
+  <a class="back" href="/">← back to Hint &amp; Seek</a>
+</main>
+</body>
+</html>
