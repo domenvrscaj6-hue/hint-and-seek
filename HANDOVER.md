@@ -172,3 +172,24 @@ are currently NOT a priority.)
 - When you change behaviour, update README.md and this file in the same commit.
 - The user is not a professional developer: explain changes simply, give exact
   copy-paste commands, and prefer small verifiable steps.
+
+### Working in parallel sessions (the user often runs 2–3 AI sessions at once)
+
+Several sessions have already built the same feature twice on separate branches
+(Sep 2026: two different rate limiters and two `schema.sql` versions). To avoid that:
+
+- **Start from the latest `main`.** Before changing anything: `git fetch origin` and base
+  your branch on `origin/main`. If your branch is behind `main`, merge `main` in first.
+- **Check open pull requests first.** If another open PR already touches the same feature
+  or the same files, tell the user and don't build it again.
+- **Shared hot-spot files:** `index.html`, `schema.sql`, `lib/emails.js`, `HANDOVER.md`,
+  `README.md`. Keep changes to them small, and mention in your reply that you touched them,
+  so the user knows the other sessions must update from `main` after merging.
+- **One PR at a time into `main`.** After a PR is merged, other sessions must pull `main`
+  before continuing. If your PR was merged, restart your branch from `main` for follow-up work.
+- **Database changes live ONLY in `schema.sql`** (keep it safe to re-run: `if not exists`,
+  `create or replace`, `drop ... if exists` where needed). Never give the user standalone SQL
+  snippets in chat — tell them to run the whole `schema.sql` from `main` in the Supabase
+  SQL Editor.
+- **Tell the user which branch and PR your work is on**, and remind them to merge PRs one
+  by one.
