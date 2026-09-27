@@ -86,7 +86,7 @@ HANDOVER.md          → dokument za nadaljevanje razvoja (zate in za AI asisten
    - [ ] 11× zaporedoma "Preview" v eni uri → prijazno sporočilo "take a little break"
    - [ ] Supabase → Database → Cron Jobs: vidiš job `hint-seek-cleanup`
    - [ ] Supabase → Table Editor → `analytics_daily`: po obisku strani vidiš `page_view`
-   - [ ] noga strani → "Privacy, plainly" odpre stran o zasebnosti
+   - [ ] noga strani → "Privacy policy" odpre stran o zasebnosti
    - [ ] povezavo do strani pošlješ v WhatsApp/Messenger → prikaže se slika s pečatom
 7. **Prava domena** (ko jo kupiš):
    - Vercel → Project → Settings → **Domains** → Add → vpiši domeno → pri registrarju nastavi
