@@ -44,6 +44,11 @@ see only hints, so choosing the gift stays theirs and the surprise survives.
   - brand mark = red wax seal with a serif "H": `favicon.svg` (tab icon on every page, incl.
     the confirm / unsubscribe pages rendered by `api/confirm.js` + `api/unsubscribe.js`),
     `apple-touch-icon.png`, and a CSS seal on the corner of the sheet / cards
+  - the give form autosaves as a draft in localStorage (`hs-give-draft-v1`: name, sender email,
+    recipients, occasion, wishes, note) and is restored on the next visit with a "Welcome back"
+    notice + "Start fresh"; the landing card then says "Continue your draft". Deleted after the
+    hints are submitted, on "Start fresh", or after 60 days. Mentioned in `privacy.html`.
+    A link's `occasion` / invite recipient wins over / is added to the draft.
   - while `/api/mask` runs, a progress bar eases to 92 % with changing status text
     (`startProgress()` in `index.html`) and jumps to 100 % when the hints arrive
   - Gemini is asked for the lowest thinking level (`thinkingConfigFor()` in `lib/gemini.js`) —
@@ -183,7 +188,7 @@ are currently NOT a priority.)
   email confirmation.
 - Keep the zero-dependency + single-file-frontend constraints unless the user
   explicitly agrees to change them.
-- When you change behaviour, update README.md and this file in the same commit.
+- When you change behaviour, update README.md and this file in the same commit. README.md is in English.
 - The user is not a professional developer: explain changes simply, give exact
   copy-paste commands, and prefer small verifiable steps.
 

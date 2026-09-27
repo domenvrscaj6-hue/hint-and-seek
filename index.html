@@ -483,6 +483,16 @@
   @keyframes progressStripes{to{background-position:22.6px 0, 0 0}}
   .progress-text{margin-top:8px;font-size:15px;font-style:italic;color:var(--ink-soft)}
 
+  /* ---------- saved draft ---------- */
+  .draft-notice{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:6px 14px}
+  .draft-notice .link-btn{font-size:15px;color:var(--seal);padding:0}
+  .draft-status{
+    display:flex;align-items:center;justify-content:center;gap:6px;
+    margin-top:14px;min-height:20px;
+    font-size:14px;font-style:italic;color:var(--pencil);
+  }
+  .draft-status .icon{font-size:15px;color:var(--seal)}
+
   /* ---------- notices ---------- */
   .notice{
     margin-top:22px;
@@ -614,6 +624,7 @@
   <symbol id="i-envelope" viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="2"/><path d="M3.6 7.2l8.4 6.3 8.4-6.3"/></symbol>
   <symbol id="i-chat" viewBox="0 0 24 24"><path d="M5 4.5h14a2 2 0 0 1 2 2v8.5a2 2 0 0 1-2 2h-7.2L7 20.5V17H5a2 2 0 0 1-2-2V6.5a2 2 0 0 1 2-2z"/><path d="M7.5 9h9M7.5 12.5h6"/></symbol>
   <symbol id="i-close" viewBox="0 0 24 24"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
   <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4.5 12h15M13.5 6l6 6-6 6"/></symbol>
 </svg>
 
@@ -635,7 +646,7 @@
           <span class="hand">Give a hint</span>
         </span>
         <span class="choice-text">Write down what you truly need, want and like. We turn it into gentle hints and mail them to the people you choose.</span>
-        <span class="choice-cta">Start writing <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></span>
+        <span class="choice-cta"><span id="give-cta-text">Start writing</span> <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></span>
       </button>
       <button class="choice" id="btn-get" type="button">
         <span class="choice-head">
@@ -687,6 +698,10 @@
     <h2>Give a hint</h2>
     <p class="lead">Fill this in like a letter. Your wishes are turned into gentle hints, and you'll check every one before anything is sent.</p>
     <div class="notice hidden" id="give-invite-note"></div>
+    <div class="notice draft-notice hidden" id="draft-notice">
+      <span id="draft-notice-text"></span>
+      <button class="link-btn" id="draft-clear" type="button">Start fresh</button>
+    </div>
 
     <form id="form-give" novalidate>
       <!-- honeypot (bots fill it, humans never see it) -->
@@ -743,6 +758,8 @@
         <p class="hint-text">Added to the end of the email <strong>word-for-word</strong> — this part is <em>not</em> masked.</p>
         <textarea id="give-notes" class="small" placeholder="e.g. Please, no scented candles this year!&#10;The one book I'd love: Brave New World by Aldous Huxley"></textarea>
       </div>
+
+      <p class="draft-status" id="draft-status" aria-live="polite"></p>
 
       <div class="notice error hidden" id="give-error"></div>
 
@@ -888,6 +905,7 @@
         var prefix = w.value.length && !w.value.endsWith("\n") ? "\n" : "";
         w.value += prefix + tag + ": ";
         w.focus();
+        saveDraftSoon();
       });
       wrap.appendChild(btn);
     });
@@ -981,6 +999,7 @@
       chip.appendChild(x);
       chipsBox.insertBefore(chip, emailInput);
     });
+    saveDraftSoon();
   }
   function tryAddEmail(){
     var v = emailInput.value.trim().replace(/,$/,"");
@@ -1000,13 +1019,99 @@
   });
   emailInput.addEventListener("blur", tryAddEmail);
 
+  /* ---------- draft: the give form is kept in this browser until it's sent ----------
+     Most people need a few days to write everything down. The draft lives only in
+     localStorage (it leaves the device only when they press "Preview"), expires after
+     60 days and is deleted once the hints are submitted or they press "Start fresh". */
+  var DRAFT_KEY = "hs-give-draft-v1";
+  var DRAFT_MAX_AGE = 60 * 24 * 3600 * 1000;
+  var DRAFT_FIELDS = { name:"give-name", senderEmail:"give-sender-email", occasion:"give-occasion", wishes:"wishes", notes:"give-notes" };
+  var OCCASIONS = ["christmas","birthday","other"];
+  var draftTimer = null;
+
+  function clearDraft(){ try{ localStorage.removeItem(DRAFT_KEY); }catch(e){} }
+  function readDraft(){
+    try{
+      var d = JSON.parse(localStorage.getItem(DRAFT_KEY) || "null");
+      if(!d || typeof d !== "object") return null;
+      if(!(Date.now() - (d.savedAt || 0) < DRAFT_MAX_AGE)){ clearDraft(); return null; }
+      return d;
+    }catch(e){ return null; }
+  }
+  function draftIsEmpty(d){
+    return !d.recipients.length && ["name","senderEmail","wishes","notes"].every(function(k){ return !String(d[k] || "").trim(); });
+  }
+  function saveDraft(){
+    clearTimeout(draftTimer);
+    var d = { savedAt: Date.now(), recipients: emails.slice(0, MAX_EMAILS) };
+    Object.keys(DRAFT_FIELDS).forEach(function(k){ d[k] = $(DRAFT_FIELDS[k]).value; });
+    try{
+      if(draftIsEmpty(d)){ localStorage.removeItem(DRAFT_KEY); setDraftStatus(false); return; }
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(d));
+      setDraftStatus(true);
+    }catch(e){ /* private mode / storage full: the form still works, it just isn't kept */ }
+  }
+  function saveDraftSoon(){ clearTimeout(draftTimer); draftTimer = setTimeout(saveDraft, 400); }
+  function setDraftStatus(saved){
+    var el = $("draft-status");
+    el.innerHTML = "";
+    if(!saved) return;
+    var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("class", "icon"); svg.setAttribute("aria-hidden", "true");
+    var use = document.createElementNS("http://www.w3.org/2000/svg", "use");
+    use.setAttribute("href", "#i-check");
+    svg.appendChild(use);
+    el.appendChild(svg);
+    el.appendChild(document.createTextNode("Draft saved in this browser — you can come back and finish later."));
+  }
+  function timeAgo(ts){
+    var min = Math.round((Date.now() - ts) / 60000);
+    if(min < 60) return "a few minutes ago";
+    var h = Math.round(min / 60);
+    if(h < 24) return h === 1 ? "an hour ago" : h + " hours ago";
+    var days = Math.round(h / 24);
+    return days === 1 ? "yesterday" : days + " days ago";
+  }
+
+  (function restoreDraft(){
+    var d = readDraft();
+    if(!d) return;
+    Object.keys(DRAFT_FIELDS).forEach(function(k){
+      var v = d[k];
+      if(typeof v !== "string") return;
+      if(k === "occasion" && (params.get("occasion") || OCCASIONS.indexOf(v) === -1)) return; // a link's occasion wins
+      $(DRAFT_FIELDS[k]).value = v.slice(0, 5000);
+    });
+    (Array.isArray(d.recipients) ? d.recipients : []).forEach(function(em){
+      em = String(em).trim().toLowerCase();
+      if(isEmail(em) && emails.indexOf(em) === -1 && emails.length < MAX_EMAILS) emails.push(em);
+    });
+    renderChips();
+    clearTimeout(draftTimer); draftTimer = null; // just opening the page is not an edit — keep the date
+    $("draft-notice-text").textContent = "Welcome back — we kept your draft from " + timeAgo(d.savedAt) +
+      ". It's saved only in this browser.";
+    $("draft-notice").classList.remove("hidden");
+    $("give-cta-text").textContent = "Continue your draft";
+    setDraftStatus(true);
+  })();
+
+  $("form-give").addEventListener("input", saveDraftSoon);
+  $("form-give").addEventListener("change", saveDraftSoon);
+  document.addEventListener("visibilitychange", function(){ if(document.visibilityState === "hidden" && draftTimer) saveDraft(); });
+
+  $("draft-clear").addEventListener("click", function(){
+    if(!window.confirm("Delete your saved draft and start with an empty form?")) return;
+    resetGive();
+    $("give-invite-note").classList.add("hidden");
+  });
+
   /* invite deep link: ?flow=give&to=<requester email>&from=<requester name>
      → the person who asked for hints is already on the recipient list */
   (function(){
     var to = String(params.get("to") || "").trim().toLowerCase();
     var from = String(params.get("from") || "").trim().slice(0, 80);
     if(params.get("flow") !== "give" || !isEmail(to)) return;
-    emails.push(to);
+    if(emails.indexOf(to) === -1) emails.push(to);
     renderChips();
     var note = $("give-invite-note");
     note.textContent = (from || "Someone") + " asked you for a few gift hints — their email (" + to +
@@ -1255,6 +1360,11 @@
     $("form-give").reset();
     emails = []; renderChips();
     maskBrands = [];
+    clearTimeout(draftTimer);
+    clearDraft();
+    setDraftStatus(false);
+    $("draft-notice").classList.add("hidden");
+    $("give-cta-text").textContent = "Start writing";
   }
 
   /* ---------- submit: get a hint ---------- */
