@@ -9,8 +9,8 @@ create table if not exists hint_submissions (
   sender_email  text not null,
   occasion      text not null check (occasion in ('christmas','birthday','other')),
   recipients    jsonb not null,          -- ["ana@example.com", ...] (blocklist already filtered out)
-  raw_sections  jsonb not null,          -- {hints, exact} raw text — private!
-  masked_hints  jsonb not null,          -- {hints: [...], exact: [...]} — what recipients receive (after sender's edits)
+  raw_sections  jsonb not null,          -- {hints} raw wishes text — private!
+  masked_hints  jsonb not null,          -- {hints: [...], exact: []} — what recipients receive (after sender's edits)
   special_notes text,
   token         text not null unique,    -- one-time confirmation token
   status        text not null default 'pending' check (status in ('pending','sent','failed')),

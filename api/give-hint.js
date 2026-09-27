@@ -1,8 +1,8 @@
 // api/give-hint.js  (Vercel serverless function)
 // Step 2 of the give flow (after the on-page preview).
 // FAIL-SAFE pipeline — if ANY step fails, NOTHING is sent to recipients:
-//   1. strict validation (at least one item across hints/exact)
-//   2. re-check edited hints (no brand/model may leak back in) — exact bypasses the check
+//   1. strict validation (at least one wish / hint)
+//   2. re-check edited hints (no brand/model may leak back in)
 //   3. blocklist check (Supabase required — no storage, no sending)
 //   4. store the submission as PENDING with a one-time token
 //   5. email a confirmation link to the sender — recipients get nothing yet.
@@ -28,7 +28,6 @@ export default async function handler(req, res) {
   if (h.error) return res.status(400).json({ error: h.error });
 
   // ---------- step 2: re-check edited hints (fail-safe against leaks) ----------
-  // Only the "hints" array is checked — "exact" passes through untouched.
   // `brands` comes from /api/mask (Gemini's brand list); the heuristic check runs regardless.
   const { clean, leaks } = checkHints(v.sections.hints, h.hints.hints, b.brands);
   if (leaks.length) {
@@ -37,7 +36,7 @@ export default async function handler(req, res) {
       error: `This hint still gives away “${first.word}”: “${first.hint}”. Please reword it (or remove it) — nothing was sent.`
     });
   }
-  const hints = { hints: clean, exact: h.hints.exact };
+  const hints = { hints: clean, exact: [] };
 
   try {
     // ---------- step 3: blocklist ----------
@@ -55,8 +54,8 @@ export default async function handler(req, res) {
       sender_email: v.senderEmail,
       occasion: v.occasion,
       recipients,                    // jsonb
-      raw_sections: v.sections,      // jsonb — the private wishes { hints, exact }
-      masked_hints: hints,           // jsonb — what recipients will see { hints: [...], exact: [...] }
+      raw_sections: v.sections,      // jsonb — the private wishes { hints }
+      masked_hints: hints,           // jsonb — what recipients will see { hints: [...], exact: [] }
       special_notes: v.specialNotes || null,
       token,
       status: "pending",

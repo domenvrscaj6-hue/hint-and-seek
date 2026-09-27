@@ -1,21 +1,19 @@
 # Hint & Seek 🎁
 
-Spletna stran za darila brez ugibanja: oseba napiše svoje želje v dva zavihka,
-AI zamaskira tiste, ki naj ostanejo presenečenje, oseba vse pregleda in po e-mail potrditvi
-jih dobijo izbrani ljudje. Zamaskiranih želja v izvirni obliki nihče nikoli ne vidi.
+Spletna stran za darila brez ugibanja: oseba napiše svoje želje, AI jih zamaskira v namige,
+oseba namige pregleda in po e-mail potrditvi jih dobijo izbrani ljudje.
+Želja v izvirni obliki nihče nikoli ne vidi — presenečenje ostane.
+To je edini način delovanja aplikacije (ni več zavihka *Exact Wishes*).
 
 ## Kako deluje (give tok)
 
-1. Uporabnik izpolni obrazec: ime, svoj mail, prejemniki, priložnost in želje v dveh zavihkih:
-   - **Hints & Surprises** — konkretne želje (znamke, modeli, velikosti so dobrodošli);
-     AI jih prepiše v nežne namige brez znamk.
-   - **Exact Wishes** — želje, ki naj prispejo dobesedno (npr. točen naslov knjige);
-     te **ne gredo skozi AI**.
-
-   Vsaj en zavihek mora imeti vsebino. Special notes je lahko prazen.
-2. `POST /api/mask` → Gemini spremeni Hints zavihek v namige, Exact Wishes se samo razdelijo
-   po vrsticah → uporabnik na strani vse **pregleda, uredi ali izbriše**
-   (skupaj mora ostati vsaj en namig ali želja).
+1. Uporabnik izpolni obrazec: ime, svoj mail, prejemniki, priložnost in **želje**
+   (konkretno — znamke, modeli, velikosti so dobrodošli; AI jih prepiše v nežne namige brez znamk).
+   Vse je obvezno razen polja **Anything specific?** (prej *Special notes*): to je osebna opomba
+   na koncu maila, ki gre **dobesedno, brez AI** — npr. »Please, no scented candles this year«
+   ali konkretna želja, ki ne rabi biti presenečenje.
+2. `POST /api/mask` → Gemini spremeni želje v namige → uporabnik jih na strani
+   **pregleda, uredi, doda ali izbriše** (ostati mora vsaj en namig).
 3. `POST /api/give-hint` → strežnik še enkrat validira in preveri namige (fail-safe:
    če je v urejen namig ušla znamka/model, pošiljanje zavrne in pove, kateri namig popraviti), preveri blocklist,
    shrani oddajo kot `pending` in pošlje **potrditveni mail pošiljatelju**.
@@ -43,7 +41,7 @@ Plavajoči gumb 💬 spodaj desno odpre obrazec (predlog / napaka / drugo) →
 
 ```
 index.html           → celoten frontend (HTML + CSS + JS v eni datoteki)
-api/mask.js          → Hints zavihek → namigi (Gemini), Exact zavihek → nespremenjeno; za predogled
+api/mask.js          → želje → namigi (Gemini), za predogled
 api/give-hint.js     → validacija + shranjevanje pending + potrditveni mail pošiljatelju
 api/confirm.js       → potrditveni link → pošiljanje namigov prejemnikom
 api/get-hint.js      → pull tok: vabilo osebi, od katere želiš namige
@@ -53,7 +51,7 @@ lib/gemini.js        → Gemini klic z avtomatskim preklopom modelov + scrub fil
 lib/emails.js        → 3 tematske predloge (božič/rd/other) + vabilo + potrditveni mail + Resend
 lib/store.js         → Supabase (v tej verziji OBVEZEN — brez njega se nič ne pošlje)
 lib/security.js      → HMAC podpisi za unsubscribe, generiranje tokenov
-lib/validate.js      → stroga validacija (vse obvezno razen Special notes; vsaj en zavihek)
+lib/validate.js      → stroga validacija (vse obvezno razen opombe "Anything specific?")
 schema.sql           → tabele za Supabase
 HANDOVER.md          → dokument za nadaljevanje razvoja (zate in za AI asistente)
 ```
@@ -92,9 +90,10 @@ HANDOVER.md          → dokument za nadaljevanje razvoja (zate in za AI asisten
    - [ ] give tok od začetka do konca na svojem mailu (predogled → potrditveni mail → klik → namigi prispejo)
    - [ ] odprtje potrditvenega linka samo pokaže gumb, pošlje šele klik
    - [ ] potrditveni link drugič pokaže "Already done"
-   - [ ] namigi ne razkrijejo znamk (poskusi "Sony WH-1000XM5" v Hints zavihku)
-   - [ ] Exact Wishes prispejo dobesedno
-   - [ ] oba zavihka prazna → obrazec ne pusti naprej
+   - [ ] namigi ne razkrijejo znamk (poskusi "Sony WH-1000XM5" in "lego set")
+   - [ ] če v predogledu v namig ročno vpišeš znamko, pošiljanje zavrne in pove, kaj popraviti
+   - [ ] opomba "Anything specific?" prispe dobesedno na konec maila
+   - [ ] prazne želje → obrazec ne pusti naprej
    - [ ] unsubscribe link → stran z gumbom → po kliku se vnovično pošiljanje na ta mail zavrne
    - [ ] get tok: vabilo prispe, gumb odpre stran s pravilno priložnostjo
    - [ ] feedback widget: sporočilo prispe na `FEEDBACK_TO`
