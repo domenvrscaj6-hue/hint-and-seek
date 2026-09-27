@@ -21,7 +21,9 @@ Hint & Seek is a small web app that solves gift-giving two ways:
     the AI; it was removed in September 2026 on purpose. Don't bring it back.
 - **Get a hint (pull):** a gift-giver enters their own name + email and the email of the
   person they're shopping for; that person receives a friendly invite to fill in the
-  Give flow. Nobody imposes a wishlist — hints arrive only on request.
+  Give flow. The invite link (`?flow=give&occasion=…&to=<requester>&from=<name>`)
+  pre-fills the requester as a recipient, so the hints reach them automatically.
+  Nobody imposes a wishlist — hints arrive only on request.
 
 The unique product bet: existing wishlist apps show givers the exact items; here givers
 see only hints, so choosing the gift stays theirs and the surprise survives.
@@ -95,7 +97,7 @@ Limits: max 20 recipients, 3000 chars of wishes, max 8 hints, 160 chars per hint
 | `GEMINI_MODEL` | no | first model to try; default `gemini-3.5-flash`, fallbacks follow automatically |
 | `RESEND_API_KEY` | yes | resend.com |
 | `EMAIL_FROM` | yes | `Hint & Seek <hints@domain.com>`; domain needs SPF + DKIM in Resend |
-| `SITE_URL` | yes | `https://www.hintandseek.com` — used in confirm / unsubscribe / invite links |
+| `SITE_URL` | yes | `https://www.hintandseek.com` — used in confirm / unsubscribe / invite links (trailing slash stripped by `siteUrlFrom()`) |
 | `SUPABASE_URL` | yes | project REST URL |
 | `SUPABASE_SERVICE_KEY` | yes | service role key (server-side only!) |
 | `APP_SECRET` | yes | long random string; HMAC for unsubscribe links |

@@ -55,6 +55,12 @@ create table if not exists rate_limits (
   hits         int not null default 0
 );
 alter table rate_limits enable row level security;
+-- (repairs a rate_limits table created by an earlier draft that used "count" instead of "hits")
+alter table rate_limits add column if not exists hits int not null default 0;
+
+-- An earlier draft defined this function with other parameter names; Postgres
+-- can't "create or replace" over that, so drop it first (safe: nothing depends on it).
+drop function if exists hit_rate_limit(text, int, int);
 
 -- Counts one hit and returns true if the caller is still under the limit.
 -- Atomic (single upsert), so parallel requests can't sneak past the limit.
@@ -81,6 +87,7 @@ $$;
 
 -- Only the server (service key) may call it.
 revoke all on function hit_rate_limit(text, int, int) from public, anon, authenticated;
+grant execute on function hit_rate_limit(text, int, int) to service_role;
 
 -- ---------------------------------------------------------------------------
 -- Analytics (privacy-friendly, written by lib/analytics.js).
@@ -168,6 +175,9 @@ as $$
 $$;
 
 revoke all on function cleanup_old_rows() from public, anon, authenticated;
+
+-- Remove a job with an older name from an earlier draft, if it exists.
+select cron.unschedule(jobid) from cron.job where jobname = 'hint-and-seek-cleanup';
 
 -- (Re)schedule — safe to run this file again, the job is replaced, not duplicated.
 select cron.schedule('hint-seek-cleanup', '17 3 * * *', $$select public.cleanup_old_rows()$$);

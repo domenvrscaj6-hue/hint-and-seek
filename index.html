@@ -441,6 +441,7 @@
     <div class="back-row"><button class="link-btn js-back" type="button">← back</button></div>
     <h2>Give a hint</h2>
     <p class="lead">Fill this in like a letter. Nobody will see your wishes word-for-word — they'll receive warm, anonymous-feeling hints, and you'll get to check them first. Only the optional note at the end goes out exactly as you write it.</p>
+    <div class="notice hidden" id="give-invite-note"></div>
 
     <form id="form-give" novalidate>
       <!-- honeypot (bots fill it, humans never see it) -->
@@ -607,6 +608,7 @@
     <option value="other">💬 Other</option>
   </select>
   <textarea id="fb-message" placeholder="What's on your mind?"></textarea>
+  <input type="text" id="fb-website" tabindex="-1" autocomplete="off" style="position:absolute;left:-5000px" aria-hidden="true">
   <button class="fb-send" id="fb-send" type="button">Send feedback</button>
   <div class="fb-msg hidden" id="fb-msg"></div>
 </div>
@@ -676,6 +678,15 @@
     } catch(e){}
   }
   function isEmail(s){ return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(s); }
+  // Turns a failed response into a readable Error — even when the body isn't JSON
+  // (e.g. a Vercel timeout page), so users never see "Unexpected token <".
+  function apiError(res){
+    return res.json().catch(function(){ return {}; }).then(function(j){
+      throw new Error(j.error || (res.status === 429
+        ? "Too many requests for now — nothing was sent. Please try again a bit later."
+        : "Something went wrong on our side — nothing was sent. Please try again."));
+    });
+  }
   function setError(id, msg){
     var el = $(id);
     if(!msg){ el.classList.add("hidden"); el.textContent=""; return; }
@@ -737,6 +748,20 @@
   });
   emailInput.addEventListener("blur", tryAddEmail);
 
+  /* invite deep link: ?flow=give&to=<requester email>&from=<requester name>
+     → the person who asked for hints is already on the recipient list */
+  (function(){
+    var to = String(params.get("to") || "").trim().toLowerCase();
+    var from = String(params.get("from") || "").trim().slice(0, 80);
+    if(params.get("flow") !== "give" || !isEmail(to)) return;
+    emails.push(to);
+    renderChips();
+    var note = $("give-invite-note");
+    note.textContent = (from || "Someone") + " asked you for a few gift hints — their email (" + to +
+      ") is already added below. Add anyone else you like.";
+    note.classList.remove("hidden");
+  })();
+
   /* ---------- wishes ---------- */
   var wishes = $("wishes");
   renderInspireTags();
@@ -783,7 +808,7 @@
       headers:{ "Content-Type":"application/json" },
       body: JSON.stringify(givePayload())
     }).then(function(res){
-      if(!res.ok){ return res.json().then(function(j){ throw new Error(j.error || "Something went wrong — please try again."); }); }
+      if(!res.ok){ return apiError(res); }
       return res.json();
     }).then(function(data){
       previewIsDemo = false;
@@ -963,7 +988,7 @@
       $("postmark-word").textContent = "Sent!";
       $("success-title").textContent = "Off it goes ✉️";
       $("success-text").textContent = "We've asked " + email + " for a few hints, nicely and on your behalf. " +
-        "You'll hear from them once they fill in their wishes.";
+        "Once they fill in their wishes, the hints come straight to your inbox.";
       show("view-success");
       $("form-get").reset();
     });
@@ -979,7 +1004,7 @@
       headers:{ "Content-Type":"application/json" },
       body: JSON.stringify(payload)
     }).then(function(res){
-      if(!res.ok){ return res.json().then(function(j){ throw new Error(j.error || "Something went wrong — please try again."); }); }
+      if(!res.ok){ return apiError(res); }
       return res.json();
     }).then(function(){
       onOk();
@@ -1028,15 +1053,17 @@
     fetch("/api/feedback", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ type: typeEl.value, message: msg })
+      body: JSON.stringify({ type: typeEl.value, message: msg, website: document.getElementById("fb-website").value })
     }).then(function(res){
-      if(!res.ok) throw new Error("Failed");
+      if(!res.ok){
+        return res.json().catch(function(){ return {}; }).then(function(j){ throw new Error(j.error || "Couldn't send — please try again."); });
+      }
       msgEl.textContent = "Thank you! Your feedback was sent. ✉️";
       msgEl.classList.remove("hidden");
       textEl.value = "";
       setTimeout(function(){ popup.classList.remove("open"); fab.textContent = "💬"; }, 2000);
-    }).catch(function(){
-      msgEl.textContent = "Couldn't send — please try again.";
+    }).catch(function(err){
+      msgEl.textContent = (err && err.message && !(err instanceof TypeError)) ? err.message : "Couldn't send — please try again.";
       msgEl.classList.remove("hidden");
     }).finally(function(){
       sendBtn.disabled = false;

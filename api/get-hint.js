@@ -5,7 +5,7 @@
 
 import { buildInviteEmail, sendEmail, unsubscribeHeaders } from "../lib/emails.js";
 import { insertRow, blockedAmong } from "../lib/store.js";
-import { unsubscribeUrl } from "../lib/security.js";
+import { unsubscribeUrl, siteUrlFrom } from "../lib/security.js";
 import { OCCASIONS, EMAIL_RE } from "../lib/validate.js";
 import { rateLimit } from "../lib/ratelimit.js";
 import { track } from "../lib/analytics.js";
@@ -41,7 +41,7 @@ export default async function handler(req, res) {
       occasion
     });
 
-    const siteUrl = process.env.SITE_URL || `https://${req.headers.host}`;
+    const siteUrl = siteUrlFrom(req);
     const unsubUrl = unsubscribeUrl(siteUrl, targetEmail);
     const { subject, html } = buildInviteEmail({
       requesterName,

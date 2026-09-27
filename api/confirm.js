@@ -9,7 +9,7 @@
 
 import { buildHintEmail, sendEmail, unsubscribeHeaders } from "../lib/emails.js";
 import { selectRows, updateRows, blockedAmong } from "../lib/store.js";
-import { unsubscribeUrl } from "../lib/security.js";
+import { unsubscribeUrl, siteUrlFrom } from "../lib/security.js";
 import { track } from "../lib/analytics.js";
 
 // `mark` = text in the round stamp; `extra` = optional trusted HTML (e.g. the confirm button)
@@ -104,7 +104,7 @@ export default async function handler(req, res) {
       return res.status(422).send(page("Nothing to send", "Everyone on your list has opted out of Hint & Seek emails, so the hints could not be delivered.", BAD));
     }
 
-    const siteUrl = process.env.SITE_URL || `https://${req.headers.host}`;
+    const siteUrl = siteUrlFrom(req);
     const results = await Promise.allSettled(
       recipients.map(to => {
         const unsubUrl = unsubscribeUrl(siteUrl, to);
