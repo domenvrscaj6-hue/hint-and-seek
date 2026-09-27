@@ -78,7 +78,7 @@ HANDOVER.md          → dokument za nadaljevanje razvoja (zate in za AI asisten
      `gemini-2.5-flash-lite` in `gemini-2.0-flash-001`.
    - `RESEND_API_KEY` — iz resend.com
    - `EMAIL_FROM` — npr. `Hint & Seek <hints@tvojadomena.com>`
-   - `SITE_URL` — npr. `https://hintandseek.com` (uporablja se v confirm/unsubscribe/vabilo linkih)
+   - `SITE_URL` — `https://www.hintandseek.com` (uporablja se v confirm/unsubscribe/vabilo linkih)
    - `SUPABASE_URL`, `SUPABASE_SERVICE_KEY` — iz Supabase (Settings → API) — **obvezno**
    - `APP_SECRET` — dolg naključen niz (npr. 40+ znakov), za podpisovanje unsubscribe linkov
    - `FEEDBACK_TO` — opcijsko; kam pridejo sporočila iz feedback widgeta (privzeto `EMAIL_FROM`)
@@ -104,7 +104,7 @@ HANDOVER.md          → dokument za nadaljevanje razvoja (zate in za AI asisten
 - Rate limiting po IP (npr. Upstash Redis; trenutno ščitita honeypot in double opt-in).
 - Čiščenje starih pending vrstic (Supabase scheduled function ali cron).
 - Analitika prek Supabase (ogledi, oddaje, koliko ljudi ureja AI namige).
-- Privacy policy stran, prava domena (potem `og:image` v `index.html` spremeni v absolutni URL).
+- Privacy policy stran.
 - Kasneje (ni prioriteta): različne sekcije za različne prejemnike, anonimna rezervacija namiga.
 
 ## Stroški

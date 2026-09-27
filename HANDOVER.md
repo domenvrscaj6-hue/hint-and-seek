@@ -144,8 +144,8 @@ was removed (Sep 2026): masking is the product. Specific wishes go in the option
 
 **Phase 3: Polishing & analytics**
 3. Free analytics using Supabase directly (page views, form submissions, AI edit rates).
-4. Landing polish: privacy policy one-pager, real domain (then make `og:image` an absolute
-   URL — scrapers like Facebook/LinkedIn need it). Favicon + OG tags are done.
+4. Landing polish: privacy policy one-pager. Favicon, OG tags and the domain
+   (https://www.hintandseek.com — canonical + absolute `og:image`) are done.
 
 (Features like "per-recipient sections" and "anonymous reservation" are postponed and
 are currently NOT a priority.)
