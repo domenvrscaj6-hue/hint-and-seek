@@ -9,8 +9,8 @@ create table if not exists hint_submissions (
   sender_email  text not null,
   occasion      text not null check (occasion in ('christmas','birthday','other')),
   recipients    jsonb not null,          -- ["ana@example.com", ...] (blocklist already filtered out)
-  raw_sections  jsonb not null,          -- {needs, wants, likes} — private!
-  masked_hints  jsonb not null,          -- what recipients receive (after sender's edits)
+  raw_sections  jsonb not null,          -- {hints} raw wishes text — private!
+  masked_hints  jsonb not null,          -- {hints: [...], exact: []} — what recipients receive (after sender's edits)
   special_notes text,
   token         text not null unique,    -- one-time confirmation token
   status        text not null default 'pending' check (status in ('pending','sent','failed')),
@@ -23,13 +23,13 @@ create index if not exists idx_submissions_token on hint_submissions (token);
 create table if not exists hint_requests (
   id             uuid primary key default gen_random_uuid(),
   created_at     timestamptz not null default now(),
-  requester_name text not null,
+  requester_name  text not null,
   requester_email text,
   target_email   text not null,
   occasion       text not null check (occasion in ('christmas','birthday','other'))
 );
 
--- Already created the table with an older schema.sql? This adds the new column.
+-- Upgrade for databases created before requester_email existed (safe to re-run).
 alter table hint_requests add column if not exists requester_email text;
 
 -- People who never want to receive Hint & Seek emails again.
@@ -87,7 +87,7 @@ revoke all on function hit_rate_limit(text, int, int) from public, anon, authent
 -- No cookies, IPs, emails, names, wishes or hints — only an event name and
 -- a few counts/labels in props. Kept for 13 months (see cleanup below).
 -- Events: page_view {view, source}, mask_ok, mask_failed, give_submitted
--- {recipients, hints, exact, generated, kept, edited, deleted, added},
+-- {recipients, hints, generated, kept, edited, deleted, added},
 -- hints_sent {sent}, get_submitted, feedback_sent {type}.
 -- ---------------------------------------------------------------------------
 create table if not exists analytics_events (
