@@ -11,7 +11,8 @@ Hint & Seek is a small web app that solves gift-giving two ways:
 
 - **Give a hint (push):** a person writes their wishes (specific is good — brands, models,
   sizes) and chooses recipients and an occasion (Christmas / Birthday / Other). An LLM
-  (Google Gemini) masks the wishes into gentle, brand-free hints; recipients never see the
+  (Google Gemini) masks the wishes into gentle hints — nudges toward an activity or need that never name
+  the item itself (not just the brand removed); recipients never see the
   raw text. The person reviews and edits the hints, confirms via an email link, and only
   then do recipients get a themed email.
   - The optional **"Anything specific?"** note (stored as `special_notes`) is the ONLY
