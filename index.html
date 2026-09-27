@@ -5,20 +5,51 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Hint &amp; Seek — gift hints, the old-fashioned way</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23f3ead7'/%3E%3C!-- envelope body --%3E%3Crect x='4' y='9' width='24' height='16' rx='2' fill='%23e6d9bd' stroke='%23c4b496' stroke-width='.8'/%3E%3C!-- envelope flap --%3E%3Cpath d='M4 11 L16 19 L28 11' fill='none' stroke='%23c4b496' stroke-width='.8' stroke-linejoin='round'/%3E%3Cpath d='M4 9 L16 18 L28 9 Z' fill='%23efe4c9' stroke='%23c4b496' stroke-width='.8' stroke-linejoin='round'/%3E%3C!-- paper peeking out --%3E%3Crect x='9' y='5' width='14' height='14' rx='1' fill='%23faf5ea' stroke='%23d8c9a8' stroke-width='.6'/%3E%3C!-- paper lines --%3E%3Cline x1='11' y1='8' x2='21' y2='8' stroke='%23d8c9a8' stroke-width='.5'/%3E%3Cline x1='11' y1='10.5' x2='21' y2='10.5' stroke='%23d8c9a8' stroke-width='.5'/%3E%3Cline x1='11' y1='13' x2='18' y2='13' stroke='%23d8c9a8' stroke-width='.5'/%3E%3C!-- wax seal --%3E%3Ccircle cx='16' cy='22' r='4.5' fill='%23a4443a'/%3E%3Ccircle cx='16' cy='22' r='3.2' fill='none' stroke='%237e332b' stroke-width='.5'/%3E%3Ctext x='16' y='23.8' text-anchor='middle' font-size='5' font-weight='bold' font-family='serif' fill='%23fdf6e6'%3EH%3C/text%3E%3C/svg%3E">
+<meta name="description" content="Tell your people what you'd love as a gift — they get gentle hints, never your exact wishes, so the surprise stays alive.">
+<meta name="theme-color" content="#2e2318">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Hint &amp; Seek — better gifts, without spoiling the surprise">
+<meta property="og:description" content="Write down what you'd love. Your people get gentle hints, never your exact wishes — so choosing the gift stays theirs.">
+<!-- TODO: make absolute (https://<real-domain>/og-image.jpg) once the domain is set -->
+<meta property="og:image" content="/og-image.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<script>
+/* Hold the sheet back (max 1.2 s) until the web fonts are in, so the handwriting
+   doesn't flash in a fallback font first. Without JS nothing is hidden. */
+(function(d){
+  var root = d.documentElement;
+  if(!d.fonts || !d.fonts.load) return;
+  root.classList.add("fonts-loading");
+  function done(){ root.classList.remove("fonts-loading"); }
+  setTimeout(done, 1200);
+  Promise.all([
+    d.fonts.load("700 1em Caveat"), d.fonts.load("1em Caveat"),
+    d.fonts.load('1em "EB Garamond"'), d.fonts.load('italic 1em "EB Garamond"'),
+    d.fonts.load('600 1em "EB Garamond"')
+  ]).then(done, done);
+})(document);
+</script>
 <style>
   :root{
     --paper:#f3ead7;
     --paper-edge:#e6d9bd;
+    --card:#efe4c9;
+    --chip:#eadfc4;
     --ink:#3a2c1c;
     --ink-soft:#5c4a33;
-    --pencil:#8b8070;
+    --pencil:#76695a;
     --seal:#a4443a;
     --seal-dark:#7e332b;
+    --seal-ink:#fdf6e6;
     --rule:#d8c9a8;
+    --rule-strong:#b8a582;
     --desk:#2e2318;
+    --desk-text:#cdbd9c;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html{-webkit-text-size-adjust:100%}
@@ -29,11 +60,22 @@
     background:
       url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.05 0.5' numOctaves='3'/%3E%3CfeColorMatrix values='0 0 0 0 0.24 0 0 0 0 0.18 0 0 0 0 0.12 0 0 0 0.15 0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E"),
       linear-gradient(180deg, #3d2e1e 0%, #2e2318 40%, #251c12 100%);
+    background-color:var(--desk);
     display:flex;
     flex-direction:column;
     align-items:center;
-    padding:40px 16px 64px;
+    padding:40px 16px 72px;
   }
+  main, footer{transition:opacity .35s ease}
+  .fonts-loading main, .fonts-loading footer{opacity:0}
+
+  /* ---------- icons (SVG sprite at the top of <body>) ---------- */
+  .icon{
+    width:1em;height:1em;flex:0 0 auto;
+    fill:none;stroke:currentColor;stroke-width:1.6;
+    stroke-linecap:round;stroke-linejoin:round;
+  }
+
   /* ---------- paper sheet ---------- */
   .sheet{
     position:relative;
@@ -57,8 +99,16 @@
   }
   .sheet > *{position:relative}
   @media (max-width:560px){
-    .sheet{padding:34px 22px 42px;transform:none}
+    body{padding:20px 12px 104px}
+    .sheet{padding:32px 20px 40px;transform:none}
   }
+
+  /* page-turn feel when switching views (sections go display:none → block) */
+  @keyframes pageIn{
+    from{opacity:0;transform:translateY(10px)}
+    to{opacity:1;transform:none}
+  }
+  .sheet > section{animation:pageIn .38s ease both}
 
   /* ---------- typography ---------- */
   h1,h2,.hand{font-family:'Caveat', cursive;color:var(--ink)}
@@ -82,48 +132,79 @@
     margin-bottom:2px;
   }
   .hint-text{
-    font-size:13.5px;
+    font-size:14px;
     font-style:italic;
     color:var(--pencil);
     line-height:1.45;
     margin-bottom:8px;
   }
-  .field{margin-top:26px}
+
+  /* ---------- form layout ---------- */
+  .group-title{
+    display:flex;align-items:center;gap:10px;
+    font-family:'Caveat',cursive;font-size:27px;font-weight:700;line-height:1;
+    color:var(--seal);
+    margin:36px 0 -2px;
+  }
+  .group-title::after{content:"";flex:1;border-top:1.5px dashed var(--rule);margin-top:4px}
+  .group-num{
+    flex:0 0 auto;
+    width:28px;height:28px;border-radius:50%;
+    background:var(--seal);color:var(--seal-ink);
+    font-size:19px;line-height:28px;text-align:center;
+  }
+  .lead + form .group-title:first-of-type{margin-top:30px}
+  .field{margin-top:24px}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:0 28px}
+  .field-row .field{display:flex;flex-direction:column}
+  .field-row .field > input, .field-row .field > select{margin-top:auto}
+  @media (max-width:560px){
+    .field-row{grid-template-columns:1fr}
+  }
 
   /* ---------- inputs ---------- */
   input[type=text], input[type=email], select, textarea{
     width:100%;
-    background:transparent;
+    background-color:transparent;
     border:none;
-    border-bottom:1.5px solid var(--rule);
+    border-bottom:1.5px solid var(--rule-strong);
     font-family:'Caveat', cursive;
     font-size:22px;
     color:var(--ink);
-    padding:4px 2px 6px;
+    padding:4px 4px 6px;
     border-radius:0;
+    transition:border-color .15s ease, box-shadow .15s ease, background-color .15s ease;
   }
   select{
     font-family:'EB Garamond', serif;
     font-size:17px;
-    padding:6px 2px;
+    padding:6px 4px;
     cursor:pointer;
     appearance:none;
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9'%3E%3Cpath d='M1 1l6 6 6-6' fill='none' stroke='%235c4a33' stroke-width='1.6'/%3E%3C/svg%3E");
     background-repeat:no-repeat;
-    background-position:right 4px center;
+    background-position:right 6px center;
   }
-  input:focus, select:focus, textarea:focus, button:focus-visible{
+  input:hover, select:hover{border-bottom-color:var(--pencil)}
+  /* focus: the line "inks up" in seal red instead of a dashed box */
+  input:focus, select:focus{
+    outline:none;
+    border-bottom-color:var(--seal);
+    box-shadow:0 1.5px 0 var(--seal);
+    background-color:rgba(164,68,58,.045);
+  }
+  button:focus-visible{
     outline:2px dashed var(--seal);
     outline-offset:3px;
   }
-  ::placeholder{color:#b3a488;opacity:1}
+  ::placeholder{color:#ad9d80;opacity:1}
 
   /* ruled-paper textarea — the signature element */
   textarea{
     --line:32px;
-    border:1px solid var(--rule);
+    border:1px solid var(--rule-strong);
     border-radius:2px;
-    background:
+    background-image:
       repeating-linear-gradient(
         to bottom,
         transparent 0,
@@ -139,16 +220,30 @@
     resize:vertical;
   }
   textarea.small{min-height:calc(var(--line) * 3 + 2px)}
+  textarea:hover{border-color:var(--pencil)}
+  textarea:focus{
+    outline:none;
+    border-color:var(--seal);
+    box-shadow:0 0 0 1px var(--seal);
+    background-color:rgba(164,68,58,.03);
+  }
 
   /* ---------- email chips ---------- */
   .chips{
     display:flex;flex-wrap:wrap;gap:8px;align-items:center;
-    border-bottom:1.5px solid var(--rule);
-    padding:4px 0 8px;
+    border-bottom:1.5px solid var(--rule-strong);
+    padding:4px 4px 8px;
+    transition:border-color .15s ease, box-shadow .15s ease, background-color .15s ease;
+  }
+  .chips:hover{border-bottom-color:var(--pencil)}
+  .chips:focus-within{
+    border-bottom-color:var(--seal);
+    box-shadow:0 1.5px 0 var(--seal);
+    background-color:rgba(164,68,58,.045);
   }
   .chip{
     display:inline-flex;align-items:center;gap:7px;
-    background:#eadfc4;
+    background:var(--chip);
     border:1px solid var(--rule);
     border-radius:2px 4px 3px 5px;
     padding:3px 9px;
@@ -160,24 +255,35 @@
     border:none;background:none;cursor:pointer;
     font-family:inherit;font-size:15px;color:var(--seal);line-height:1;padding:0 2px;
   }
-  .chips input{border:none;flex:1;min-width:180px}
+  .chips input{border:none;flex:1;min-width:180px;padding-left:0}
+  .chips input:focus{box-shadow:none;background-color:transparent}
   .chips.shake{animation:shake .3s}
   @keyframes shake{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
 
   /* ---------- inspiration tags ---------- */
-  .inspire-tags{
-    display:flex;flex-wrap:wrap;gap:6px;
-    margin-top:14px;margin-bottom:10px;
+  .inspire{
+    display:flex;flex-wrap:wrap;align-items:center;gap:6px;
+    margin:12px 0 10px;
     min-height:28px;
   }
+  .inspire-label{font-size:14px;font-style:italic;color:var(--pencil);margin-right:2px}
+  .inspire-tags{display:contents}
   .inspire-tag{
-    font-family:'EB Garamond',serif;font-size:13px;font-style:italic;
-    color:var(--pencil);background:#eadfc4;
-    border:1px solid var(--rule);border-radius:12px;
-    padding:2px 10px;cursor:pointer;
-    transition:background .15s, color .15s;
+    font-family:'EB Garamond',serif;font-size:14px;font-style:italic;
+    color:var(--ink-soft);background:var(--chip);
+    border:1px solid var(--rule-strong);border-radius:14px;
+    padding:2px 11px 3px 9px;cursor:pointer;
+    transition:background-color .15s, color .15s, border-color .15s, transform .1s;
   }
-  .inspire-tag:hover{background:#ddd0b2;color:var(--ink)}
+  .inspire-tag::before{
+    content:"+";
+    font-style:normal;font-weight:600;
+    color:var(--seal);margin-right:4px;
+    transition:color .15s;
+  }
+  .inspire-tag:hover{background:var(--seal);border-color:var(--seal-dark);color:var(--seal-ink)}
+  .inspire-tag:hover::before{color:var(--seal-ink)}
+  .inspire-tag:active{transform:translateY(1px)}
 
   /* ---------- preview hint rows ---------- */
   .hint-row{display:flex;gap:8px;align-items:center;margin-top:4px}
@@ -202,7 +308,7 @@
     display:inline-block;
     font-family:'Caveat', cursive;
     font-size:26px;font-weight:700;
-    color:#fdf6e6;
+    color:var(--seal-ink);
     background:var(--seal);
     border:none;
     border-radius:4px 7px 5px 8px;
@@ -211,7 +317,7 @@
     box-shadow:0 3px 0 var(--seal-dark), 0 6px 14px rgba(0,0,0,.28);
     transition:transform .08s ease, box-shadow .08s ease;
   }
-  .stamp-btn:hover{transform:translateY(-1px)}
+  .stamp-btn:hover{transform:translateY(-1px);box-shadow:0 4px 0 var(--seal-dark), 0 8px 18px rgba(0,0,0,.3)}
   .stamp-btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--seal-dark)}
   .stamp-btn[disabled]{opacity:.55;cursor:wait;transform:none}
   .btn-row{margin-top:36px;text-align:center}
@@ -224,14 +330,15 @@
   .back-row{margin-bottom:18px}
 
   /* ---------- landing choice cards ---------- */
-  .choices{display:flex;gap:26px;margin-top:38px;justify-content:center;flex-wrap:wrap}
+  .choices{display:flex;gap:26px;margin-top:36px;justify-content:center;flex-wrap:wrap}
   .choice{
     flex:1;min-width:230px;max-width:275px;
-    background:#efe4c9;
+    display:flex;flex-direction:column;
+    background:var(--card);
     border:1px solid var(--rule);
     border-radius:3px 6px 4px 7px;
     box-shadow:0 2px 3px rgba(0,0,0,.15), 0 10px 20px rgba(0,0,0,.12);
-    padding:26px 24px 28px;
+    padding:24px 24px 20px;
     cursor:pointer;text-align:left;
     font-family:inherit;color:var(--ink);
     transition:transform .15s ease, box-shadow .15s ease;
@@ -239,9 +346,94 @@
   .choice:nth-child(1){transform:rotate(-1.1deg)}
   .choice:nth-child(2){transform:rotate(1deg)}
   .choice:hover{transform:rotate(0) translateY(-4px);box-shadow:0 4px 6px rgba(0,0,0,.18), 0 16px 28px rgba(0,0,0,.2)}
-  .choice .hand{font-size:30px;font-weight:700;color:var(--seal)}
-  .choice p{font-size:15.5px;line-height:1.5;color:var(--ink-soft);margin-top:8px}
-  .choice .emoji{font-size:26px}
+  .choice-head{display:flex;align-items:center;gap:12px}
+  .choice-icon{
+    flex:0 0 auto;
+    display:flex;align-items:center;justify-content:center;
+    width:46px;height:46px;border-radius:50%;
+    border:1.5px dashed var(--seal);color:var(--seal);
+    font-size:22px;
+  }
+  .choice .hand{display:block;font-size:31px;font-weight:700;line-height:1.05;color:var(--seal)}
+  .choice-text{display:block;flex:1;font-size:15.5px;line-height:1.5;color:var(--ink-soft);margin-top:14px}
+  .choice-cta{
+    display:flex;align-items:center;gap:6px;
+    margin-top:16px;padding-top:12px;
+    border-top:1px dashed var(--rule-strong);
+    font-size:16px;font-style:italic;font-weight:500;color:var(--seal);
+  }
+  .choice-cta .icon{font-size:16px;transition:transform .15s ease}
+  .choice:hover .choice-cta .icon{transform:translateX(4px)}
+
+  /* ---------- how it works ---------- */
+  .how{margin-top:46px}
+  .how-title{
+    display:flex;align-items:center;gap:14px;
+    font-size:13px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--pencil);
+  }
+  .how-title::before, .how-title::after{content:"";flex:1;border-top:1px solid var(--rule)}
+  .steps{
+    list-style:none;
+    display:grid;grid-template-columns:repeat(3,1fr);gap:14px;
+    margin-top:24px;
+    position:relative;
+  }
+  .steps::before{ /* dashed path linking the three stamps */
+    content:"";position:absolute;
+    top:28px;left:calc(100% / 6);right:calc(100% / 6);
+    border-top:1.5px dashed var(--rule-strong);
+  }
+  .step{text-align:center;position:relative}
+  .step-stamp{
+    position:relative;
+    display:flex;align-items:center;justify-content:center;
+    width:56px;height:56px;margin:0 auto 10px;
+    border-radius:50%;
+    background:var(--paper);
+    border:1.5px dashed var(--seal);
+    box-shadow:inset 0 0 0 4px var(--paper), inset 0 0 0 5px rgba(164,68,58,.28);
+    color:var(--seal);font-size:24px;
+  }
+  .step-num{
+    position:absolute;top:-5px;right:-7px;
+    width:22px;height:22px;border-radius:50%;
+    background:var(--seal);color:var(--seal-ink);
+    font-family:'Caveat',cursive;font-weight:700;font-size:16px;line-height:22px;text-align:center;
+  }
+  .step-name{display:block;font-family:'Caveat',cursive;font-size:23px;font-weight:700;line-height:1.1;color:var(--ink)}
+  .step-label{display:block;font-size:15px;line-height:1.4;color:var(--ink-soft);margin-top:2px}
+
+  /* before → after example */
+  .example{display:flex;align-items:center;gap:14px;margin-top:30px}
+  .example-note{
+    flex:1;
+    background:var(--card);
+    border:1px solid var(--rule);
+    border-radius:3px 5px 4px 6px;
+    padding:12px 16px 14px;
+    box-shadow:0 1px 2px rgba(0,0,0,.1), 0 6px 14px rgba(0,0,0,.08);
+  }
+  .example-note.wish{transform:rotate(-1deg)}
+  .example-note.hint{transform:rotate(.8deg)}
+  .example-tag{
+    display:flex;align-items:center;gap:6px;
+    font-size:12px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--pencil);
+  }
+  .example-note .hand{display:block;font-size:23px;line-height:1.2;margin-top:4px}
+  .example-note.wish .hand{color:var(--ink-soft)}
+  .example-note.hint .hand::before{content:"✦ ";color:var(--seal);font-size:.7em;vertical-align:.12em}
+  .example-arrow{font-size:28px;color:var(--seal)}
+  @media (max-width:560px){
+    .choice{max-width:none}
+    .steps{gap:8px}
+    .step-label{font-size:13.5px}
+    .example{flex-direction:column;gap:6px}
+    .example-note{width:100%}
+    .example-arrow{transform:rotate(90deg)}
+  }
+
   @media (prefers-reduced-motion:reduce){
     *{animation:none!important;transition:none!important}
   }
@@ -261,69 +453,36 @@
   /* ---------- success ---------- */
   .success{text-align:center;padding:22px 0 8px}
   .postmark{
-    width:120px;height:120px;margin:0 auto 18px;
+    width:124px;height:124px;margin:0 auto 20px;
     border:2.5px dashed var(--seal);
     border-radius:50%;
+    box-shadow:inset 0 0 0 6px var(--paper), inset 0 0 0 7.5px rgba(164,68,58,.45);
     display:flex;align-items:center;justify-content:center;
     flex-direction:column;gap:2px;
     color:var(--seal);
     transform:rotate(-8deg);
-    font-family:'Caveat',cursive;font-weight:700;font-size:24px;
+    font-family:'Caveat',cursive;font-weight:700;font-size:25px;
+    animation:stampIn .6s cubic-bezier(.2,.9,.3,1.25) .15s both;
   }
   .postmark small{font-family:'EB Garamond',serif;font-size:11px;letter-spacing:.18em;text-transform:uppercase}
+  /* the stamp comes down onto the paper */
+  @keyframes stampIn{
+    0%{opacity:0;transform:scale(1.8) rotate(-24deg)}
+    55%{opacity:1;transform:scale(.9) rotate(-5deg)}
+    100%{opacity:1;transform:scale(1) rotate(-8deg)}
+  }
 
   footer{
-    margin-top:26px;color:#c9b896;font-size:13.5px;font-style:italic;
+    margin-top:28px;color:var(--desk-text);font-size:13.5px;font-style:italic;
     text-align:center;line-height:1.6;max-width:520px;
   }
   footer a{color:inherit}
 
-  /* ---------- 3-step strip ---------- */
-  .steps-strip{
-    display:flex;
-    justify-content:center;
-    align-items:flex-start;
-    gap:12px;
-    margin-top:36px;
-    max-width:600px;
-    width:100%;
-    padding:0 16px;
-  }
-  .step-item{
-    flex:1;
-    text-align:center;
-    position:relative;
-  }
-  .step-icon{
-    font-size:30px;
-    line-height:1;
-    margin-bottom:8px;
-    display:block;
-  }
-  .step-label{
-    font-family:'EB Garamond',serif;
-    font-size:14px;
-    font-style:italic;
-    color:#c9b896;
-    line-height:1.4;
-  }
-  .step-arrow{
-    flex:0 0 auto;
-    color:#6b5d47;
-    font-size:20px;
-    margin-top:10px;
-    opacity:.5;
-  }
-  @media (max-width:420px){
-    .steps-strip{gap:6px}
-    .step-label{font-size:12.5px}
-    .step-icon{font-size:26px}
-  }
   /* ---------- feedback widget ---------- */
   .fb-fab{
     position:fixed;bottom:20px;right:20px;z-index:1000;
     width:48px;height:48px;border-radius:50%;
-    background:var(--seal);color:#fdf6e6;
+    background:var(--seal);color:var(--seal-ink);
     border:none;cursor:pointer;
     font-size:22px;line-height:1;
     box-shadow:0 3px 12px rgba(0,0,0,.35);
@@ -331,6 +490,9 @@
     display:flex;align-items:center;justify-content:center;
   }
   .fb-fab:hover{background:var(--seal-dark);transform:scale(1.08)}
+  .fb-fab .i-close{display:none}
+  .fb-fab.open .i-chat{display:none}
+  .fb-fab.open .i-close{display:block}
 
   .fb-popup{
     position:fixed;bottom:78px;right:20px;z-index:1000;
@@ -356,21 +518,22 @@
   .fb-popup select{
     width:100%;padding:6px 8px;
     font-family:'EB Garamond',serif;font-size:16px;
-    border:1px solid var(--rule);border-radius:3px;
-    background:transparent;color:var(--ink);
+    border:1px solid var(--rule-strong);border-radius:3px;
+    background-color:transparent;color:var(--ink);
     margin-bottom:10px;cursor:pointer;
   }
   .fb-popup textarea{
     width:100%;height:90px;resize:vertical;
-    font-family:'Caveat',cursive;font-size:18px;
+    font-family:'Caveat',cursive;font-size:18px;line-height:1.4;
     color:var(--ink);background:transparent;
-    border:1px solid var(--rule);border-radius:3px;
-    padding:8px 10px;margin-bottom:10px;
+    border:1px solid var(--rule-strong);border-radius:3px;
+    padding:8px 10px;margin-bottom:10px;min-height:0;
   }
+  .fb-popup select:focus, .fb-popup textarea:focus{border-color:var(--seal);box-shadow:0 0 0 1px var(--seal)}
   .fb-popup textarea::placeholder{color:var(--pencil);font-style:italic}
   .fb-popup .fb-send{
     width:100%;padding:9px;
-    background:var(--seal);color:#fdf6e6;
+    background:var(--seal);color:var(--seal-ink);
     border:none;border-radius:3px;cursor:pointer;
     font-family:'EB Garamond',serif;font-size:16px;
     font-style:italic;letter-spacing:.05em;
@@ -383,18 +546,30 @@
     margin-top:8px;text-align:center;
   }
   .fb-popup .fb-close{
-    position:absolute;top:8px;right:10px;
+    position:absolute;top:10px;right:10px;
+    display:flex;
     background:none;border:none;cursor:pointer;
-    font-size:18px;color:var(--pencil);line-height:1;
+    font-size:18px;color:var(--pencil);line-height:1;padding:2px;
   }
-  @media (max-width:400px){
-    .fb-popup{width:calc(100vw - 32px);right:16px;bottom:74px}
-    .fb-fab{width:42px;height:42px;font-size:20px;bottom:16px;right:16px}
+  @media (max-width:560px){
+    .fb-popup{width:calc(100vw - 32px);right:16px;bottom:70px}
+    .fb-fab{width:42px;height:42px;font-size:19px;bottom:16px;right:16px}
   }
 
 </style>
 </head>
 <body>
+
+<!-- icon sprite: simple ink-line icons, drawn with currentColor -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-pen" viewBox="0 0 24 24"><path d="M4 20l1.1-4.2L16.4 4.5a2.1 2.1 0 0 1 3 3L8.2 18.9 4 20z"/><path d="M14.6 6.3l3 3"/><path d="M12 20h8"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.2"/><path d="M15.2 15.2L20.5 20.5"/><path d="M7.8 8.6a3.2 3.2 0 0 1 2.4-1.5"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2"/><path d="M8 10.5V7.8a4 4 0 0 1 8 0v2.7"/><path d="M12 14.5v2.5"/></symbol>
+  <symbol id="i-envelope" viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="2"/><path d="M3.6 7.2l8.4 6.3 8.4-6.3"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M5 4.5h14a2 2 0 0 1 2 2v8.5a2 2 0 0 1-2 2h-7.2L7 20.5V17H5a2 2 0 0 1-2-2V6.5a2 2 0 0 1 2-2z"/><path d="M7.5 9h9M7.5 12.5h6"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4.5 12h15M13.5 6l6 6-6 6"/></symbol>
+</svg>
 
 <main class="sheet" id="sheet">
 
@@ -408,15 +583,54 @@
 
     <div class="choices">
       <button class="choice" id="btn-give" type="button">
-        <span class="emoji" aria-hidden="true">✍️</span>
-        <div class="hand">Give a hint</div>
-        <p>Write down what you truly need, want and like. We turn it into gentle hints and mail them to the people you choose.</p>
+        <span class="choice-head">
+          <span class="choice-icon" aria-hidden="true"><svg class="icon"><use href="#i-pen"/></svg></span>
+          <span class="hand">Give a hint</span>
+        </span>
+        <span class="choice-text">Write down what you truly need, want and like. We turn it into gentle hints and mail them to the people you choose.</span>
+        <span class="choice-cta">Start writing <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></span>
       </button>
       <button class="choice" id="btn-get" type="button">
-        <span class="emoji" aria-hidden="true">🔍</span>
-        <div class="hand">Get a hint</div>
-        <p>Buying a gift for someone and out of ideas? We'll kindly ask them for hints on your behalf — the surprise stays safe.</p>
+        <span class="choice-head">
+          <span class="choice-icon" aria-hidden="true"><svg class="icon"><use href="#i-search"/></svg></span>
+          <span class="hand">Get a hint</span>
+        </span>
+        <span class="choice-text">Buying a gift for someone and out of ideas? We'll kindly ask them for hints on your behalf — the surprise stays safe.</span>
+        <span class="choice-cta">Ask for hints <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></span>
       </button>
+    </div>
+
+    <div class="how">
+      <h3 class="how-title">How it works</h3>
+      <ol class="steps">
+        <li class="step">
+          <span class="step-stamp" aria-hidden="true"><svg class="icon"><use href="#i-pen"/></svg><span class="step-num">1</span></span>
+          <span class="step-name">You write</span>
+          <span class="step-label">your wishes, as exact as you like</span>
+        </li>
+        <li class="step">
+          <span class="step-stamp" aria-hidden="true"><svg class="icon"><use href="#i-lock"/></svg><span class="step-num">2</span></span>
+          <span class="step-name">AI masks</span>
+          <span class="step-label">brands and models into gentle hints</span>
+        </li>
+        <li class="step">
+          <span class="step-stamp" aria-hidden="true"><svg class="icon"><use href="#i-envelope"/></svg><span class="step-num">3</span></span>
+          <span class="step-name">They guess</span>
+          <span class="step-label">your people get hints, not a shopping list</span>
+        </li>
+      </ol>
+
+      <figure class="example" aria-label="Example: a wish and the hint made from it">
+        <div class="example-note wish">
+          <span class="example-tag"><svg class="icon" aria-hidden="true"><use href="#i-lock"/></svg>You write</span>
+          <span class="hand">Nike Pegasus 41 running shoes, size 42</span>
+        </div>
+        <svg class="icon example-arrow" aria-hidden="true"><use href="#i-arrow"/></svg>
+        <div class="example-note hint">
+          <span class="example-tag"><svg class="icon" aria-hidden="true"><use href="#i-envelope"/></svg>They read</span>
+          <span class="hand">Something to make those early-morning runs feel lighter</span>
+        </div>
+      </figure>
     </div>
   </section>
 
@@ -424,27 +638,31 @@
   <section id="view-give" class="hidden">
     <div class="back-row"><button class="link-btn js-back" type="button">← back</button></div>
     <h2>Give a hint</h2>
-    <p class="lead">Fill this in like a letter. Nobody will see your wishes word-for-word — they'll receive warm, anonymous-feeling hints, and you'll get to check them first. Only the optional note at the end goes out exactly as you write it.</p>
+    <p class="lead">Fill this in like a letter. Your wishes are turned into gentle hints, and you'll check every one before anything is sent.</p>
 
     <form id="form-give" novalidate>
       <!-- honeypot (bots fill it, humans never see it) -->
       <input type="text" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-5000px" aria-hidden="true">
 
-      <div class="field">
-        <label for="give-name">Your name</label>
-        <p class="hint-text">First and last name — so people know who these hints are from.</p>
-        <input type="text" id="give-name" autocomplete="name" maxlength="80" required>
-      </div>
+      <h3 class="group-title"><span class="group-num">1</span>From you, to them</h3>
 
-      <div class="field">
-        <label for="give-sender-email">Your email</label>
-        <p class="hint-text">We'll send you a confirmation link — nothing goes out to anyone until you click it.</p>
-        <input type="email" id="give-sender-email" autocomplete="email" inputmode="email" required>
+      <div class="field-row">
+        <div class="field">
+          <label for="give-name">Your name</label>
+          <p class="hint-text">So people know who the hints are from.</p>
+          <input type="text" id="give-name" autocomplete="name" maxlength="80" required>
+        </div>
+
+        <div class="field">
+          <label for="give-sender-email">Your email</label>
+          <p class="hint-text">For a confirmation link — nothing goes out before you click it.</p>
+          <input type="email" id="give-sender-email" autocomplete="email" inputmode="email" required>
+        </div>
       </div>
 
       <div class="field">
         <label for="give-emails">Send hints to</label>
-        <p class="hint-text">Type an email and press Enter — add as many people as you like (up to 20).</p>
+        <p class="hint-text">Press Enter after each address · up to 20 people.</p>
         <div class="chips" id="chips">
           <input type="email" id="give-emails" placeholder="name@example.com" inputmode="email">
         </div>
@@ -452,7 +670,7 @@
 
       <div class="field">
         <label for="give-occasion">Occasion</label>
-        <p class="hint-text">Sets the look and the tone of the email your people receive.</p>
+        <p class="hint-text">Sets the look and tone of the email.</p>
         <select id="give-occasion">
           <option value="christmas">Christmas</option>
           <option value="birthday">Birthday</option>
@@ -460,17 +678,22 @@
         </select>
       </div>
 
+      <h3 class="group-title"><span class="group-num">2</span>What you wish for</h3>
+
       <div class="field">
         <label for="wishes">Your wishes</label>
-        <p class="hint-text" style="margin-bottom:6px">Write exactly what you want — brands, models, sizes, the lot, one wish per line. The AI rephrases everything into gentle, brand-free hints, so the surprise stays alive.</p>
-        <div class="inspire-tags" id="inspire-tags"></div>
+        <p class="hint-text" style="margin-bottom:0">Be as exact as you like — brands, models, sizes, one per line. The AI turns each into a gentle, brand-free hint.</p>
+        <div class="inspire">
+          <span class="inspire-label">Stuck? Start a line with</span>
+          <span class="inspire-tags" id="inspire-tags"></span>
+        </div>
         <textarea id="wishes" placeholder="e.g. Nike Pegasus 41 running shoes size 42, Le Creuset Dutch oven in Marseille blue, Kindle Paperwhite…"></textarea>
       </div>
 
       <div class="field">
         <label for="give-notes">Anything specific? <span style="font-weight:400">(optional)</span></label>
-        <p class="hint-text">A personal note at the end of the email, sent <strong>word-for-word</strong> — this part is <em>not</em> masked. Good for a wish that doesn't need to be a surprise, or anything your people should know.</p>
-        <textarea id="give-notes" class="small" placeholder="e.g. Please, no scented candles this year 🙂&#10;The one book I'd love: Brave New World by Aldous Huxley"></textarea>
+        <p class="hint-text">Added to the end of the email <strong>word-for-word</strong> — this part is <em>not</em> masked.</p>
+        <textarea id="give-notes" class="small" placeholder="e.g. Please, no scented candles this year!&#10;The one book I'd love: Brave New World by Aldous Huxley"></textarea>
       </div>
 
       <div class="notice error hidden" id="give-error"></div>
@@ -501,37 +724,45 @@
   <section id="view-get" class="hidden">
     <div class="back-row"><button class="link-btn js-back" type="button">← back</button></div>
     <h2>Get a hint</h2>
-    <p class="lead">Tell us who you're shopping for. We'll send them a short, friendly note asking for a few gift hints — they share directions, not exact wishes, so your gift stays a surprise for both of you.</p>
+    <p class="lead">Tell us who you're shopping for. We'll send them a friendly note asking for a few hints — directions, not exact wishes, so the surprise stays safe for both of you.</p>
 
     <form id="form-get" novalidate>
       <input type="text" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-5000px" aria-hidden="true">
 
-      <div class="field">
-        <label for="get-name">Your name</label>
-        <p class="hint-text">First and last name — so they know who's asking.</p>
-        <input type="text" id="get-name" autocomplete="name" maxlength="80" required>
+      <h3 class="group-title"><span class="group-num">1</span>About you</h3>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="get-name">Your name</label>
+          <p class="hint-text">So they know who's asking.</p>
+          <input type="text" id="get-name" autocomplete="name" maxlength="80" required>
+        </div>
+
+        <div class="field">
+          <label for="get-requester-email">Your email</label>
+          <p class="hint-text">Included in the invite, so they can reach you.</p>
+          <input type="email" id="get-requester-email" placeholder="your@email.com" inputmode="email" autocomplete="email" required>
+        </div>
       </div>
 
-      <div class="field">
-        <label for="get-requester-email">Your email</label>
-        <p class="hint-text">So they can reach you if they need to — included in the invite.</p>
-        <input type="email" id="get-requester-email" placeholder="your@email.com" inputmode="email" autocomplete="email" required>
-      </div>
+      <h3 class="group-title"><span class="group-num">2</span>About them</h3>
 
-      <div class="field">
-        <label for="get-email">Their email</label>
-        <p class="hint-text">The person you'd love some hints from.</p>
-        <input type="email" id="get-email" placeholder="name@example.com" inputmode="email" required>
-      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="get-email">Their email</label>
+          <p class="hint-text">The person you'd love some hints from.</p>
+          <input type="email" id="get-email" placeholder="name@example.com" inputmode="email" required>
+        </div>
 
-      <div class="field">
-        <label for="get-occasion">Occasion</label>
-        <p class="hint-text">So we can ask them nicely and in the right spirit.</p>
-        <select id="get-occasion">
-          <option value="christmas">Christmas</option>
-          <option value="birthday">Birthday</option>
-          <option value="other">Other occasion</option>
-        </select>
+        <div class="field">
+          <label for="get-occasion">Occasion</label>
+          <p class="hint-text">So we ask in the right spirit.</p>
+          <select id="get-occasion">
+            <option value="christmas">Christmas</option>
+            <option value="birthday">Birthday</option>
+            <option value="other">Other occasion</option>
+          </select>
+        </div>
       </div>
 
       <div class="notice error hidden" id="get-error"></div>
@@ -546,7 +777,7 @@
   <section id="view-success" class="hidden">
     <div class="success">
       <div class="postmark"><span id="postmark-word">Sent!</span><small>Hint &amp; Seek</small></div>
-      <h2 id="success-title" style="text-align:center">Off it goes ✉️</h2>
+      <h2 id="success-title" style="text-align:center">Off it goes</h2>
       <p class="lead" id="success-text" style="margin-top:10px"></p>
       <div class="btn-row">
         <button class="stamp-btn js-back" type="button">Back to start</button>
@@ -556,40 +787,25 @@
 
 </main>
 
-<!-- 3-step strip -->
-<div class="steps-strip" aria-label="How it works">
-  <div class="step-item">
-    <span class="step-icon">✍️</span>
-    <span class="step-label">Write your wishes</span>
-  </div>
-  <span class="step-arrow" aria-hidden="true">→</span>
-  <div class="step-item">
-    <span class="step-icon">🔒</span>
-    <span class="step-label">AI masks the surprise</span>
-  </div>
-  <span class="step-arrow" aria-hidden="true">→</span>
-  <div class="step-item">
-    <span class="step-icon">✉️</span>
-    <span class="step-label">They get gentle hints</span>
-  </div>
-</div>
-
 <footer>
   Hint &amp; Seek never shows your exact wishes to gift-givers. Recipient emails are used only for delivery,
   and every email includes a one-click way to opt out of future notes.
 </footer>
 
 <!-- feedback widget -->
-<button class="fb-fab" id="fb-fab" type="button" aria-label="Send feedback">💬</button>
+<button class="fb-fab" id="fb-fab" type="button" aria-label="Send feedback" aria-expanded="false" aria-controls="fb-popup">
+  <svg class="icon i-chat" aria-hidden="true"><use href="#i-chat"/></svg>
+  <svg class="icon i-close" aria-hidden="true"><use href="#i-close"/></svg>
+</button>
 <div class="fb-popup" id="fb-popup">
-  <button class="fb-close" id="fb-close" type="button" aria-label="Close">✕</button>
+  <button class="fb-close" id="fb-close" type="button" aria-label="Close"><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button>
   <h4>Send us a note</h4>
-  <select id="fb-type">
-    <option value="suggestion">💡 Suggestion</option>
-    <option value="bug">🐛 Bug report</option>
-    <option value="other">💬 Other</option>
+  <select id="fb-type" aria-label="Feedback type">
+    <option value="suggestion">Suggestion</option>
+    <option value="bug">Bug report</option>
+    <option value="other">Something else</option>
   </select>
-  <textarea id="fb-message" placeholder="What's on your mind?"></textarea>
+  <textarea id="fb-message" placeholder="What's on your mind?" aria-label="Your message"></textarea>
   <button class="fb-send" id="fb-send" type="button">Send feedback</button>
   <div class="fb-msg hidden" id="fb-msg"></div>
 </div>
@@ -612,6 +828,7 @@
     inspireTags.forEach(function(tag){
       var btn = document.createElement("button");
       btn.type = "button"; btn.className = "inspire-tag"; btn.textContent = tag;
+      btn.setAttribute("aria-label", "Start a line with \u201c" + tag + "\u201d");
       btn.addEventListener("click", function(){
         var w = $("wishes");
         var prefix = w.value.length && !w.value.endsWith("\n") ? "\n" : "";
@@ -870,7 +1087,7 @@
 
     send("/api/give-hint", payload, $("preview-send"), "preview-error", function(){
       $("postmark-word").textContent = "Almost!";
-      $("success-title").textContent = "One click to go ✉️";
+      $("success-title").textContent = "One click to go";
       $("success-text").textContent = "We've emailed a confirmation link to " + payload.senderEmail +
         ". Your hints go out to " + payload.recipients.length +
         (payload.recipients.length === 1 ? " person" : " people") +
@@ -908,7 +1125,7 @@
     };
     send("/api/get-hint", payload, $("get-send"), "get-error", function(){
       $("postmark-word").textContent = "Sent!";
-      $("success-title").textContent = "Off it goes ✉️";
+      $("success-title").textContent = "Off it goes";
       $("success-text").textContent = "We've asked " + email + " for a few hints, nicely and on your behalf. " +
         "You'll hear from them once they fill in their wishes.";
       show("view-success");
@@ -956,9 +1173,14 @@
   var typeEl = document.getElementById("fb-type");
   var textEl = document.getElementById("fb-message");
 
+  function setFab(open){
+    fab.classList.toggle("open", open);
+    fab.setAttribute("aria-expanded", open ? "true" : "false");
+    fab.setAttribute("aria-label", open ? "Close feedback" : "Send feedback");
+  }
   function toggle(){
     var open = popup.classList.toggle("open");
-    fab.textContent = open ? "✕" : "💬";
+    setFab(open);
     if(open){ msgEl.classList.add("hidden"); textEl.focus(); }
   }
   fab.addEventListener("click", toggle);
@@ -978,10 +1200,10 @@
       body: JSON.stringify({ type: typeEl.value, message: msg })
     }).then(function(res){
       if(!res.ok) throw new Error("Failed");
-      msgEl.textContent = "Thank you! Your feedback was sent. ✉️";
+      msgEl.textContent = "Thank you — your note is on its way.";
       msgEl.classList.remove("hidden");
       textEl.value = "";
-      setTimeout(function(){ popup.classList.remove("open"); fab.textContent = "💬"; }, 2000);
+      setTimeout(function(){ popup.classList.remove("open"); setFab(false); }, 2000);
     }).catch(function(){
       msgEl.textContent = "Couldn't send — please try again.";
       msgEl.classList.remove("hidden");

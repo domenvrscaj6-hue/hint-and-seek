@@ -34,13 +34,14 @@ oseba dobi prijazno vabilo z linkom nazaj na "Give a hint" (z že izbrano prilo�
 
 ## Povratne informacije
 
-Plavajoči gumb 💬 spodaj desno odpre obrazec (predlog / napaka / drugo) →
+Plavajoči gumb z oblačkom spodaj desno odpre obrazec (predlog / napaka / drugo) →
 `POST /api/feedback` → sporočilo pride po mailu na `FEEDBACK_TO` (ali `EMAIL_FROM`).
 
 ## Struktura projekta
 
 ```
 index.html           → celoten frontend (HTML + CSS + JS v eni datoteki)
+og-image.jpg         → slika za deljenje linkov (Open Graph, 1200×630)
 api/mask.js          → želje → namigi (Gemini), za predogled
 api/give-hint.js     → validacija + shranjevanje pending + potrditveni mail pošiljatelju
 api/confirm.js       → potrditveni link → pošiljanje namigov prejemnikom
@@ -103,7 +104,7 @@ HANDOVER.md          → dokument za nadaljevanje razvoja (zate in za AI asisten
 - Rate limiting po IP (npr. Upstash Redis; trenutno ščitita honeypot in double opt-in).
 - Čiščenje starih pending vrstic (Supabase scheduled function ali cron).
 - Analitika prek Supabase (ogledi, oddaje, koliko ljudi ureja AI namige).
-- Privacy policy stran, favicon, OG tagi za deljenje linkov, prava domena.
+- Privacy policy stran, prava domena (potem `og:image` v `index.html` spremeni v absolutni URL).
 - Kasneje (ni prioriteta): različne sekcije za različne prejemnike, anonimna rezervacija namiga.
 
 ## Stroški
