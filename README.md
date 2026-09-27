@@ -16,12 +16,15 @@ jih dobijo izbrani ljudje. Zamaskiranih želja v izvirni obliki nihče nikoli ne
 2. `POST /api/mask` → Gemini spremeni Hints zavihek v namige, Exact Wishes se samo razdelijo
    po vrsticah → uporabnik na strani vse **pregleda, uredi ali izbriše**
    (skupaj mora ostati vsaj en namig ali želja).
-3. `POST /api/give-hint` → strežnik še enkrat validira in prečisti namige (fail-safe:
-   če je v urejen namig ušla znamka/model, ga odstrani), preveri blocklist,
+3. `POST /api/give-hint` → strežnik še enkrat validira in preveri namige (fail-safe:
+   če je v urejen namig ušla znamka/model, pošiljanje zavrne in pove, kateri namig popraviti), preveri blocklist,
    shrani oddajo kot `pending` in pošlje **potrditveni mail pošiljatelju**.
    Prejemniki v tem koraku ne dobijo ničesar.
-4. Pošiljatelj klikne link → `GET /api/confirm?token=...` → namigi se pošljejo prejemnikom
-   (vsak mail ima unsubscribe link), oddaja dobi status `sent`. Link deluje enkrat, poteče v 48 h.
+4. Pošiljatelj odpre link → `GET /api/confirm?token=...` pokaže stran z gumbom **Send the hints** →
+   šele klik (`POST`) pošlje namige prejemnikom (vsak mail ima unsubscribe link), oddaja dobi status `sent`.
+   Link deluje enkrat, poteče v 48 h.
+   *Zakaj gumb:* varnostni skenerji v mailih (Outlook, korporativni filtri) sami odprejo vsak link —
+   zgolj odprtje linka zato nikoli ničesar ne pošlje. Enako velja za unsubscribe link.
 
 **Fail-safe pravilo skozi cel tok:** če katerikoli korak pade (validacija, maskiranje,
 shranjevanje, blocklist, mail), se prejemnikom ne pošlje nič.
@@ -87,11 +90,12 @@ HANDOVER.md          → dokument za nadaljevanje razvoja (zate in za AI asisten
    brez tega maili pristajajo v spamu.
 6. **Test checklist:**
    - [ ] give tok od začetka do konca na svojem mailu (predogled → potrditveni mail → klik → namigi prispejo)
+   - [ ] odprtje potrditvenega linka samo pokaže gumb, pošlje šele klik
    - [ ] potrditveni link drugič pokaže "Already done"
    - [ ] namigi ne razkrijejo znamk (poskusi "Sony WH-1000XM5" v Hints zavihku)
    - [ ] Exact Wishes prispejo dobesedno
    - [ ] oba zavihka prazna → obrazec ne pusti naprej
-   - [ ] unsubscribe link → vnovično pošiljanje na ta mail se zavrne
+   - [ ] unsubscribe link → stran z gumbom → po kliku se vnovično pošiljanje na ta mail zavrne
    - [ ] get tok: vabilo prispe, gumb odpre stran s pravilno priložnostjo
    - [ ] feedback widget: sporočilo prispe na `FEEDBACK_TO`
 

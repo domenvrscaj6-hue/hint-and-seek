@@ -61,10 +61,12 @@ Browser (index.html, vanilla JS)
    │  POST /api/mask ────────────► hints tab → Gemini (mask → hints); exact tab → pass-through
    │  POST /api/give-hint ───────► validate → scrub hints → blocklist → Supabase (pending)
    │                                └─► Resend: confirmation email to SENDER only
-   │  GET  /api/confirm?token ───► Supabase (pending row) → Resend: hint emails
-   │                                to each recipient (with unsubscribe link) → status=sent
+   │  GET  /api/confirm?token ───► page with a "Send the hints" button (sends nothing)
+   │  POST /api/confirm?token ───► atomic claim pending→sent → Resend: hint emails
+   │                                to each recipient (with unsubscribe link + List-Unsubscribe header)
    │  POST /api/get-hint ────────► blocklist → Supabase (hint_requests) → Resend: invite
-   │  GET  /api/unsubscribe ─────► verify HMAC → Supabase blocklist
+   │  GET  /api/unsubscribe ─────► verify HMAC → page with an "Unsubscribe" button
+   │  POST /api/unsubscribe ─────► verify HMAC → Supabase blocklist (also RFC 8058 one-click)
    │  POST /api/feedback ────────► Resend: email to FEEDBACK_TO (or EMAIL_FROM)
 ```
 
@@ -75,8 +77,7 @@ sections (raw, private)   = { hints: "free text, one wish per line", exact: "fre
 hints    (what is sent)   = { hints: ["masked hint", ...], exact: ["exact wish", ...] }
 ```
 
-Limits: max 20 recipients, 3000 chars per tab, max 8 AI hints (6 kept after edit
-validation), max 10 exact wishes, 160 chars per item, 600 chars special notes.
+Limits: max 20 recipients, 3000 chars per tab, max 8 AI hints, max 10 exact wishes, 160 chars per item, 600 chars special notes.
 
 ## 4. Environment variables (Vercel → Settings)
 
@@ -105,9 +106,14 @@ validation), max 10 exact wishes, 160 chars per item, 600 chars special notes.
   Background: wood grain only (no desk decorations — removed at the user's request).
 - Privacy: never log raw wishes; Gemini receives only the Hints tab text — no recipient
   emails, names, or Exact Wishes; recipient emails are used for delivery + blocklist only.
-- Masking safety: `scrubHints()` in `lib/gemini.js` runs on Gemini output, and
-  `scrubAgainstRaw()` runs again on user-edited hints in `give-hint.js`. Never remove
-  this double check. Exact Wishes are intentionally NOT scrubbed.
+- Masking safety: `checkHints()` in `lib/gemini.js` runs on Gemini output, and again on
+  user-edited hints in `give-hint.js` (which refuses to send if a hint leaks). It combines
+  a heuristic (`brandLikeTokens`: letter+digit mixes, inner capitals, ALL CAPS, capitalised
+  words mid-sentence) with the `brands` list Gemini extracts from the raw text (the browser
+  sends it back to give-hint). Whole-word matching only. Never remove this double check.
+  Exact Wishes are intentionally NOT checked.
+- Links in emails must never act on a plain GET (mail scanners open them). GET shows a
+  page with a button; the action happens on POST. Keep it that way for any new link.
 
 ## 6. How to run / deploy
 

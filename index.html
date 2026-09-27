@@ -631,6 +631,7 @@
   var emails = [];
   var MAX_EMAILS = 20;
   var previewIsDemo = false;
+  var maskBrands = [];   // brand names Gemini found — sent back so the server can re-check edited hints
 
   var SECTION_TITLES = { hints:"Hints & Surprises", exact:"Exact Wishes" };
   var sectionDesc = {
@@ -833,6 +834,7 @@
       return res.json();
     }).then(function(data){
       previewIsDemo = false;
+      maskBrands = data.brands || [];
       $("preview-note").classList.add("hidden");
       renderPreview(data.hints);
       show("view-preview");
@@ -948,6 +950,7 @@
 
     var payload = givePayload();
     payload.hints = hints;
+    payload.brands = maskBrands;
 
     send("/api/give-hint", payload, $("preview-send"), "preview-error", function(){
       $("postmark-word").textContent = "Almost!";

@@ -17,16 +17,18 @@ export default async function handler(req, res) {
 
   try {
     const result = { hints: [], exact: [] };
+    let brands = [];
 
     // "Hints & Surprises" → send to Gemini for masking
     if (v.sections.hints) {
       const masked = await maskWishes(v.sections.hints);
-      if (!masked.length) {
+      if (!masked.hints.length) {
         return res.status(422).json({
           error: "We couldn't turn your hints into safe rephrases — try rephrasing them (one wish per line works best)."
         });
       }
-      result.hints = masked;
+      result.hints = masked.hints;
+      brands = masked.brands;
     }
 
     // "Exact Wishes" → pass through untouched (just split by newlines, trim, deduplicate)
@@ -38,7 +40,8 @@ export default async function handler(req, res) {
         .slice(0, 10);
     }
 
-    return res.status(200).json({ ok: true, hints: result });
+    // brands go back to the browser so give-hint.js can re-check the user's edits against them
+    return res.status(200).json({ ok: true, hints: result, brands });
   } catch (err) {
     console.error("[mask]", err);
     return res.status(500).json({ error: "We couldn't prepare the hints right now — please try again." });
