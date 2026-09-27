@@ -31,13 +31,19 @@ see only hints, so choosing the gift stays theirs and the surprise survives.
 ## 2. Current state (September 2026) — DONE
 
 - Vintage "old paper on a wooden desk" single-page frontend (`index.html`):
-  - landing choice (Give / Get) + 3-step "how it works" strip
-  - give form: name, sender email, recipient chips, occasion, one wishes box with
-    inspiration tags, optional "Anything specific?" note
+  - landing choice cards (Give / Get) + on-sheet "how it works" (3 numbered stamps)
+    and a before → after example of a masked wish
+  - give form in two groups ("From you, to them" / "What you wish for"): name + sender
+    email side by side, recipient chips, occasion, one wishes box with "+" inspiration
+    tags, optional "Anything specific?" note
   - preview step with inline editing (add / edit / delete) of the hints
   - get form (requester name + email, target email, occasion)
   - success view
-  - floating feedback widget (💬 → suggestion / bug / other)
+  - floating feedback widget (speech-bubble button → suggestion / bug / other)
+  - icons are an inline SVG sprite (`<symbol>`s at the top of `<body>`), no emoji in the UI;
+    views fade in on switch, the success postmark "stamps" down (both off with
+    `prefers-reduced-motion`); a tiny head script hides the sheet until fonts load (max 1.2 s)
+  - meta description, `theme-color`, OG/Twitter tags; share image `og-image.png` (1200×630)
   - works as a static preview without backend ("preview mode")
 - Backend (Vercel serverless, zero npm dependencies, plain `fetch` everywhere):
   - `api/mask.js` — wishes → Gemini → hints (+ brand list)
