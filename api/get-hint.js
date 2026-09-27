@@ -7,12 +7,14 @@ import { buildInviteEmail, sendEmail } from "../lib/emails.js";
 import { insertRow, blockedAmong } from "../lib/store.js";
 import { unsubscribeUrl } from "../lib/security.js";
 import { OCCASIONS, EMAIL_RE } from "../lib/validate.js";
+import { rateLimit } from "../lib/ratelimit.js";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
   const b = req.body || {};
   if (b.website) return res.status(200).json({ ok: true }); // honeypot
+  if (!(await rateLimit(req, res, "get"))) return; // per-IP limit
 
   const requesterName = String(b.requesterName || "").trim().slice(0, 80);
   const requesterEmail = String(b.requesterEmail || "").trim().toLowerCase();

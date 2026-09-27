@@ -34,11 +34,13 @@ api/give-hint.js     → validacija + shranjevanje pending + potrditveni mail po
 api/confirm.js       → potrditveni link → pošiljanje namigov prejemnikom
 api/get-hint.js      → pull tok: vabilo osebi, od katere želiš namige
 api/unsubscribe.js   → podpisan opt-out link → blocklist
+api/feedback.js      → povratne informacije uporabnikov → mail lastniku strani
 lib/gemini.js        → Gemini klic + scrub filter (namig ne sme razkriti znamke)
 lib/emails.js        → 3 tematske predloge (božič/rd/other) + vabilo + potrditveni mail + Resend
 lib/store.js         → Supabase (v tej verziji OBVEZEN — brez njega se nič ne pošlje)
 lib/security.js      → HMAC podpisi za unsubscribe, generiranje tokenov
 lib/validate.js      → stroga validacija (vse obvezno razen Special notes)
+lib/ratelimit.js     → omejitev zahtevkov na IP (števec v Supabase, IP samo kot hash)
 schema.sql           → tabele za Supabase
 HANDOVER.md          → dokument za nadaljevanje razvoja (zate in za AI asistente)
 ```
@@ -66,6 +68,8 @@ HANDOVER.md          → dokument za nadaljevanje razvoja (zate in za AI asisten
    - `SUPABASE_URL`, `SUPABASE_SERVICE_KEY` — iz Supabase (Settings → API) — **obvezno**
    - `APP_SECRET` — dolg naključen niz (npr. 40+ znakov), za podpisovanje unsubscribe linkov
 4. **Supabase:** nov projekt → SQL Editor → prilepi `schema.sql` → Run.
+   Datoteko lahko zaženeš večkrat (npr. po posodobitvi) — obstoječi podatki ostanejo.
+   Ustvari tudi omejevanje zahtevkov (`rate_limits`) in nočno čiščenje (pg_cron, 03:17 UTC).
 5. **Resend:** dodaj domeno, nastavi SPF + DKIM (Resend pokaže točna DNS zapisa) —
    brez tega maili pristajajo v spamu.
 6. **Test checklist:**
@@ -75,13 +79,15 @@ HANDOVER.md          → dokument za nadaljevanje razvoja (zate in za AI asisten
    - [ ] prazna sekcija → obrazec ne pusti naprej
    - [ ] unsubscribe link → vnovično pošiljanje na ta mail se zavrne
    - [ ] get tok: vabilo prispe, gumb odpre stran s pravilno priložnostjo
+   - [ ] 11× zaporedoma "Preview" v eni uri → prijazno sporočilo "take a little break"
+   - [ ] Supabase → Database → Cron Jobs: vidiš job `hint-seek-cleanup`
 
 ## Znani TODO-ji za v2
 
-- Rate limiting po IP (npr. Upstash Redis; trenutno ščitita honeypot in double opt-in).
+- ~~Rate limiting po IP~~ — narejeno (Supabase, `lib/ratelimit.js`; meje nastaviš v `LIMITS`).
+- ~~Čiščenje starih pending vrstic~~ — narejeno (pg_cron job v `schema.sql`).
 - Različne sekcije za različne prejemnike (mami vse, sodelavcem samo likes).
 - Anonimna rezervacija namiga ("jaz pokrijem to smer") proti podvajanju daril.
-- Čiščenje starih pending vrstic (Supabase scheduled function ali cron).
 
 ## Stroški
 

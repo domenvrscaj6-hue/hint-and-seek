@@ -13,12 +13,14 @@ import { buildConfirmEmail, sendEmail } from "../lib/emails.js";
 import { insertRow, updateRows, blockedAmong } from "../lib/store.js";
 import { newToken } from "../lib/security.js";
 import { validateGiveBody, validateHints } from "../lib/validate.js";
+import { rateLimit } from "../lib/ratelimit.js";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
   const b = req.body || {};
   if (b.website) return res.status(200).json({ ok: true }); // honeypot
+  if (!(await rateLimit(req, res, "give"))) return; // per-IP limit
 
   // ---------- step 1: strict validation ----------
   const v = validateGiveBody(b);

@@ -3,12 +3,14 @@
 // to the site owner via email using the existing Resend setup.
 
 import { sendEmail } from "../lib/emails.js";
+import { rateLimit } from "../lib/ratelimit.js";
 
 const VALID_TYPES = ["suggestion", "bug", "other"];
 const TYPE_LABELS = { suggestion: "💡 Suggestion", bug: "🐛 Bug Report", other: "💬 Other" };
 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+  if (!(await rateLimit(req, res, "feedback"))) return; // per-IP limit
 
   const { type, message } = req.body || {};
 

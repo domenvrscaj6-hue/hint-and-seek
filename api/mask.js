@@ -5,12 +5,14 @@
 
 import { maskWishes } from "../lib/gemini.js";
 import { validateGiveBody } from "../lib/validate.js";
+import { rateLimit } from "../lib/ratelimit.js";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
   const b = req.body || {};
   if (b.website) return res.status(200).json({ ok: true, hints: { hints: [], exact: [] } }); // honeypot
+  if (!(await rateLimit(req, res, "mask"))) return; // per-IP limit
 
   const v = validateGiveBody(b);
   if (v.error) return res.status(400).json({ error: v.error });
