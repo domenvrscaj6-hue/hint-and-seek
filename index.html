@@ -929,13 +929,26 @@
 
   /* ---------- helpers ---------- */
   function $(id){ return document.getElementById(id); }
-  function show(viewId){
+  /* opts.replace: first view of the page; opts.fromHistory: the browser's back/forward button */
+  function show(viewId, opts){
+    opts = opts || {};
     ["view-landing","view-give","view-preview","view-get","view-success"].forEach(function(v){
       $(v).classList.toggle("hidden", v !== viewId);
     });
+    if(!opts.fromHistory){
+      // each view is a history entry, so the phone's back button goes to the previous
+      // view instead of leaving the site (the query string, e.g. an invite link, is kept)
+      try{ history[opts.replace ? "replaceState" : "pushState"]({ view: viewId }, ""); }catch(e){}
+    }
     window.scrollTo({top:0, behavior:"smooth"});
     trackView(viewId);
   }
+  window.addEventListener("popstate", function(e){
+    var v = e.state && e.state.view;
+    if(v === "view-success") v = "view-landing"; // never replay a finished send
+    if(v === "view-preview" && !document.querySelector('[data-list="hints"] input')) v = "view-give";
+    show(v || "view-landing", { fromHistory: true });
+  });
   /* anonymous page-view ping: no cookies, no personal data — just which view was opened */
   var trafficSource = /[?&]flow=/.test(location.search) ? "invite" : "direct";
   function trackView(viewId){
@@ -947,7 +960,7 @@
       }).catch(function(){});
     } catch(e){}
   }
-  function isEmail(s){ return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(s); }
+  function isEmail(s){ return /^[^\s@"'<>()\[\],;:\\]+@[^\s@"'<>()\[\],;:\\]+\.[^\s@"'<>()\[\],;:\\]{2,}$/.test(s); } // same rule as lib/validate.js
   // Turns a failed response into a readable Error — even when the body isn't JSON
   // (e.g. a Vercel timeout page), so users never see "Unexpected token <".
   function apiError(res){
@@ -976,10 +989,11 @@
   if(params.get("flow") === "give"){
     var occ = params.get("occasion");
     if(occ && ["christmas","birthday","other"].indexOf(occ) !== -1){ $("give-occasion").value = occ; }
-    show("view-give");
+    show("view-give", { replace: true });
   } else if(params.get("flow") === "get"){
-    show("view-get");
+    show("view-get", { replace: true });
   } else {
+    try{ history.replaceState({ view: "view-landing" }, ""); }catch(e){}
     trackView("view-landing");
   }
 
