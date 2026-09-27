@@ -193,3 +193,46 @@ Several sessions have already built the same feature twice on separate branches
   SQL Editor.
 - **Tell the user which branch and PR your work is on**, and remind them to merge PRs one
   by one.
+
+## 9. Session log
+
+### Sep 27 2026, session `claude/zen-gauss-3k9o0m` (PRs #2, #3, #5)
+
+**Done (merged in #2 and #3):**
+- Docs brought up to date; the HANDOVER formatting was fixed.
+- Brand-leak check rewritten (`checkHints` in `lib/gemini.js`):
+  - Gemini now also returns a `brands` list, and edited hints are re-checked against it.
+  - `give-hint` refuses to send and names the leaking hint instead of dropping it silently.
+- Links in emails need a button click (GET shows a page, POST acts):
+  - confirm and unsubscribe work this way;
+  - confirm is atomic, so a double click can't send twice;
+  - RFC 8058 List-Unsubscribe headers are added.
+- The XSS on the unsubscribe page is fixed.
+- "Exact Wishes" was removed.
+- The invite link pre-fills the requester as a recipient (`?to=&from=`).
+- Readable errors are shown when a response isn't JSON, and the feedback form has a honeypot.
+- `siteUrlFrom()` strips the trailing slash from `SITE_URL`.
+- `schema.sql`:
+  - safe to re-run over earlier drafts;
+  - explicitly grants `hit_rate_limit` to `service_role`;
+  - the user ran it successfully in Supabase and the cron job is scheduled.
+
+**Open (PR #5, not merged yet):** only docs — this log and the "parallel sessions" rules in §8.
+
+**Decisions (and why):**
+- **Masking only, no "Exact Wishes".** Masking is the product; anything verbatim goes in the
+  optional "Anything specific?" note (placeholder shows "no scented candles" + an exact-book example).
+- **Rate limiting and cleanup: `main`'s version from PR #1 was kept.** This session had built
+  its own, and it was dropped to avoid two versions. Note that PR #1's limiter fails open.
+- **Supabase instead of Upstash for rate limiting.** It needs no new account or service.
+- **The user runs SQL by pasting `schema.sql` into the SQL Editor.** The Supabase connector was
+  offered but not needed; giving an AI production DB access is not worth it for one-off steps.
+
+**Left unfinished / ideas:**
+- Partial send failures in `confirm.js`: recipients whose email failed are not retried.
+- The requester email in the Get flow is not verified. The target sees it and can remove it;
+  a real fix would be a confirmation email for the requester.
+- There are no automated tests; everything was checked by hand with mocked services,
+  headless Chromium and local Postgres. A small zero-dependency `node --test` suite would help.
+- PR #4 (`happy-turing`, visual polish of `index.html`) was open at the end of this session. It
+  merges cleanly with `main` and with #5; merge the two one at a time.
