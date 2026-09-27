@@ -21,7 +21,9 @@ Hint & Seek is a small web app that solves gift-giving two ways:
     the AI; it was removed in September 2026 on purpose. Don't bring it back.
 - **Get a hint (pull):** a gift-giver enters their own name + email and the email of the
   person they're shopping for; that person receives a friendly invite to fill in the
-  Give flow. Nobody imposes a wishlist — hints arrive only on request.
+  Give flow. The invite link (`?flow=give&occasion=…&to=<requester>&from=<name>`)
+  pre-fills the requester as a recipient, so the hints reach them automatically.
+  Nobody imposes a wishlist — hints arrive only on request.
 
 The unique product bet: existing wishlist apps show givers the exact items; here givers
 see only hints, so choosing the gift stays theirs and the surprise survives.
@@ -41,7 +43,7 @@ see only hints, so choosing the gift stays theirs and the surprise survives.
   - icons are an inline SVG sprite (`<symbol>`s at the top of `<body>`), no emoji in the UI;
     views fade in on switch, the success postmark "stamps" down (both off with
     `prefers-reduced-motion`); a tiny head script hides the sheet until fonts load (max 1.2 s)
-  - meta description, `theme-color`, OG/Twitter tags; share image `og-image.jpg` (1200×630)
+  - meta description, `theme-color`, OG/Twitter tags; share image `og-image.png` (1200×630)
   - works as a static preview without backend ("preview mode")
 - Backend (Vercel serverless, zero npm dependencies, plain `fetch` everywhere):
   - `api/mask.js` — wishes → Gemini → hints (+ brand list)
@@ -75,6 +77,12 @@ Browser (index.html, vanilla JS)
    │  GET  /api/unsubscribe ─────► verify HMAC → page with an "Unsubscribe" button
    │  POST /api/unsubscribe ─────► verify HMAC → Supabase blocklist (also RFC 8058 one-click)
    │  POST /api/feedback ────────► Resend: email to FEEDBACK_TO (or EMAIL_FROM)
+   │  POST /api/track ───────────► Supabase analytics_events (anonymous page views)
+   │
+   │  Every POST endpoint above (except confirm/unsubscribe) is rate limited per IP
+   │  (lib/ratelimit.js → hit_rate_limit() in Supabase). Server-side events are
+   │  recorded with lib/analytics.js. Nightly pg_cron job cleanup_old_rows() enforces
+   │  the retention promised in privacy.html.
 ```
 
 Data shapes used across the give flow:
@@ -95,7 +103,7 @@ Limits: max 20 recipients, 3000 chars of wishes, max 8 hints, 160 chars per hint
 | `GEMINI_MODEL` | no | first model to try; default `gemini-3.5-flash`, fallbacks follow automatically |
 | `RESEND_API_KEY` | yes | resend.com |
 | `EMAIL_FROM` | yes | `Hint & Seek <hints@domain.com>`; domain needs SPF + DKIM in Resend |
-| `SITE_URL` | yes | canonical https URL, used in confirm / unsubscribe / invite links |
+| `SITE_URL` | yes | `https://www.hintandseek.com` — used in confirm / unsubscribe / invite links (trailing slash stripped by `siteUrlFrom()`) |
 | `SUPABASE_URL` | yes | project REST URL |
 | `SUPABASE_SERVICE_KEY` | yes | service role key (server-side only!) |
 | `APP_SECRET` | yes | long random string; HMAC for unsubscribe links |
@@ -133,19 +141,26 @@ Limits: max 20 recipients, 3000 chars of wishes, max 8 hints, 160 chars per hint
 
 ## 7. Prioritised TODO list (agreed next steps)
 
-**Phase 1: Backend security & stability**
-1. Rate limiting on `/api/mask`, `/api/give-hint`, `/api/get-hint`, `/api/feedback`
-   (per IP; Upstash Redis free tier fits the zero-ops style). Currently only the
-   honeypot field and the double opt-in protect the endpoints.
-2. Cleanup job for expired `pending` rows (Supabase scheduled function).
+**Phase 1: Backend security & stability** — DONE (Sep 2026)
+1. Rate limiting — `lib/ratelimit.js` + `hit_rate_limit()` in `schema.sql` (Supabase instead
+   of Upstash, so no extra service). IPs stored only as an HMAC hash. Limits live in `LIMITS`.
+   The limiter fails open: it only guards against abuse, it is not a sending gate.
+2. Cleanup — `cleanup_old_rows()` + pg_cron job `hint-seek-cleanup` (03:17 UTC): deletes
+   expired pending rows, failed rows > 7 days, erases `raw_sections` once sent/failed,
+   deletes sent submissions and `hint_requests` > 90 days, analytics > 13 months.
+   These periods are promised in `privacy.html` — change both together.
 
 ~~**Phase 2: "Keep wish as is"**~~ — dropped. An "Exact Wishes" tab existed (Aug 2026) and
 was removed (Sep 2026): masking is the product. Specific wishes go in the optional note.
 
-**Phase 3: Polishing & analytics**
-3. Free analytics using Supabase directly (page views, form submissions, AI edit rates).
-4. Landing polish: privacy policy one-pager. Favicon, OG tags and the domain
-   (https://www.hintandseek.com — canonical + absolute `og:image`) are done.
+**Phase 3: Polishing & analytics** — DONE (Sep 2026)
+3. Analytics — `lib/analytics.js` + `api/track.js` → `analytics_events`, with summary views
+   `analytics_daily`, `analytics_page_views`, `analytics_ai_edits`. No cookies, IPs, emails,
+   names or text. Tracking never blocks a flow (errors swallowed, 1.5 s timeout). AI edit
+   counts are computed in the browser (`editStats` in the give-hint payload) and sanitized
+   server-side (`cleanCounts`).
+4. Landing polish — `privacy.html` (footer link), `favicon.svg`, `apple-touch-icon.png`,
+   `og-image.png` + OG/Twitter meta with absolute URLs on `https://www.hintandseek.com`.
 
 (Features like "per-recipient sections" and "anonymous reservation" are postponed and
 are currently NOT a priority.)
