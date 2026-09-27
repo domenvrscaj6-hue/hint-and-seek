@@ -11,7 +11,7 @@
 import { checkHints } from "../lib/gemini.js";
 import { buildConfirmEmail, sendEmail } from "../lib/emails.js";
 import { insertRow, updateRows, blockedAmong } from "../lib/store.js";
-import { newToken } from "../lib/security.js";
+import { newToken, siteUrlFrom } from "../lib/security.js";
 import { validateGiveBody, validateHints } from "../lib/validate.js";
 import { rateLimit } from "../lib/ratelimit.js";
 import { track, cleanCounts } from "../lib/analytics.js";
@@ -66,7 +66,7 @@ export default async function handler(req, res) {
     });
 
     // ---------- step 5: confirmation email to the sender ----------
-    const siteUrl = process.env.SITE_URL || `https://${req.headers.host}`;
+    const siteUrl = siteUrlFrom(req);
     const confirmUrl = `${siteUrl}/api/confirm?token=${token}`;
     try {
       const { subject, html } = buildConfirmEmail({

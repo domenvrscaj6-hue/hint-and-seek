@@ -30,7 +30,8 @@ shranjevanje, blocklist, mail), se prejemnikom ne pošlje nič.
 ## Get tok
 
 Obdarovalec vpiše svoje ime in mail, mail osebe in priložnost → `POST /api/get-hint` →
-oseba dobi prijazno vabilo z linkom nazaj na "Give a hint" (z že izbrano priložnostjo).
+oseba dobi prijazno vabilo z linkom nazaj na "Give a hint". V obrazcu je priložnost že izbrana,
+**mail obdarovalca pa že dodan med prejemnike** — ko oseba odda namige, pridejo naravnost k njemu.
 
 ## Povratne informacije
 
@@ -82,7 +83,8 @@ HANDOVER.md          → dokument za nadaljevanje razvoja (zate in za AI asisten
      `gemini-2.5-flash-lite` in `gemini-2.0-flash-001`.
    - `RESEND_API_KEY` — iz resend.com
    - `EMAIL_FROM` — npr. `Hint & Seek <hints@tvojadomena.com>`
-   - `SITE_URL` — `https://www.hintandseek.com` (uporablja se v confirm/unsubscribe/vabilo linkih)
+   - `SITE_URL` — `https://www.hintandseek.com` (uporablja se v confirm/unsubscribe/vabilo linkih;
+     poševnica na koncu ni pomembna, koda jo odstrani)
    - `SUPABASE_URL`, `SUPABASE_SERVICE_KEY` — iz Supabase (Settings → API) — **obvezno**
    - `APP_SECRET` — dolg naključen niz (npr. 40+ znakov), za podpisovanje unsubscribe linkov
    - `FEEDBACK_TO` — opcijsko; kam pridejo sporočila iz feedback widgeta (privzeto `EMAIL_FROM`)
