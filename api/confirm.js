@@ -49,6 +49,10 @@ function page(title, message, mark, extra = "") {
 </div></body></html>`;
 }
 
+function esc(s) {
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
 const OK = "Sent!", ASK = "One click", BAD = "Hmm…";
 
 export default async function handler(req, res) {
@@ -63,6 +67,7 @@ export default async function handler(req, res) {
     return res.status(400).send(page("That link doesn't look right", "The confirmation link is incomplete or damaged. Please open it straight from your email.", BAD));
   }
 
+  let claimed = false, delivered = false;
   try {
     const rows = await selectRows("hint_submissions", {
       select: "status,expires_at,recipients",
@@ -93,16 +98,18 @@ export default async function handler(req, res) {
 
     // ---------- POST: atomically claim the submission (pending → sent) ----------
     // Only one request can win this update, so a double click can't send twice.
-    const claimed = await updateRows(
+    const claimedRows = await updateRows(
       "hint_submissions",
       { token: `eq.${token}`, status: "eq.pending" },
       { status: "sent" },
       { returning: true }
     );
-    const sub = claimed[0];
+    const sub = claimedRows[0];
     if (!sub) {
       return res.status(200).send(page("Already done", "These hints were already confirmed and sent — no need to click twice. 🙂", OK));
     }
+
+    claimed = true;
 
     // Fail-safe: re-check the blocklist at send time.
     const blocked = await blockedAmong(sub.recipients);
@@ -127,20 +134,33 @@ export default async function handler(req, res) {
       })
     );
     const sent = results.filter(r => r.status === "fulfilled").length;
+    const failedTo = recipients.filter((_, i) => results[i].status !== "fulfilled");
+    results.forEach(r => { if (r.status !== "fulfilled") console.error("[confirm] delivery failed:", r.reason?.message); });
 
     if (sent === 0) {
       // release the claim → the sender can press the button again in a minute
       await updateRows("hint_submissions", { token: `eq.${token}` }, { status: "pending" }).catch(() => {});
+      claimed = false;
       return res.status(502).send(page("Delivery hiccup", "The hints were confirmed but no email could be delivered right now. Nothing was lost — open the link again in a few minutes.", BAD));
     }
 
-    await updateRows("hint_submissions", { token: `eq.${token}` }, { sent_count: sent });
+    delivered = true;
+    // bookkeeping only — the emails are already out, so a failure here must not say "nothing was sent"
+    await updateRows("hint_submissions", { token: `eq.${token}` }, { sent_count: sent })
+      .catch(e => console.error("[confirm] sent_count not saved:", e.message));
     await track("hints_sent", { occasion: sub.occasion, sent });
 
     const who = sent === 1 ? "1 person" : `${sent} people`;
-    return res.status(200).send(page("The hints are on their way", `Your hints were just mailed to ${who}. Your exact wishes stay private — happy gifting! 🎁`, OK));
+    const missed = failedTo.length
+      ? ` We couldn't deliver to ${failedTo.map(esc).join(", ")} — please check ${failedTo.length === 1 ? "that address" : "those addresses"} and let them know yourself.`
+      : "";
+    return res.status(200).send(page("The hints are on their way", `Your hints were just mailed to ${who}.${missed} Your exact wishes stay private — happy gifting! 🎁`, OK));
   } catch (err) {
     console.error("[confirm]", err);
+    // claimed but not delivered (e.g. the blocklist check failed) → release it, so the link still works
+    if (claimed && !delivered) {
+      await updateRows("hint_submissions", { token: `eq.${token}`, status: "eq.sent" }, { status: "pending" }).catch(() => {});
+    }
     return res.status(500).send(page("Something went wrong", "We couldn't process the confirmation right now. Nothing was sent — please try the link again shortly.", BAD));
   }
 }

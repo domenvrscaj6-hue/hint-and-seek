@@ -53,6 +53,12 @@ see only hints, so choosing the gift stays theirs and the surprise survives.
     (`startProgress()` in `index.html`) and jumps to 100 % when the hints arrive
   - Gemini is asked for the lowest thinking level (`thinkingConfigFor()` in `lib/gemini.js`) —
     "thinking" is most of the wait; a model that rejects the setting is retried without it
+  - browser back/forward moves between views (`history.pushState` in `show()`), so the phone's
+    back button no longer leaves the site mid-form
+  - confirm (`api/confirm.js`): if anything fails after the submission was claimed but before
+    any email went out, it is released back to `pending` so the link still works; partial
+    delivery tells the sender which addresses failed
+  - `EMAIL_RE` rejects quotes, brackets, commas etc. (same rule in `index.html` `isEmail`)
   - icons are an inline SVG sprite (`<symbol>`s at the top of `<body>`), no emoji in the UI;
     views fade in on switch, the success postmark "stamps" down (both off with
     `prefers-reduced-motion`); a tiny head script hides the sheet until fonts load (max 1.2 s)
