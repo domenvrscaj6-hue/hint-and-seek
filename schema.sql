@@ -7,7 +7,7 @@ create table if not exists hint_submissions (
   created_at    timestamptz not null default now(),
   sender_name   text not null,
   sender_email  text not null,
-  occasion      text not null check (occasion in ('christmas','birthday','other')),
+  occasion      text not null check (occasion in ('christmas','birthday','valentine','other')),
   recipients    jsonb not null,          -- ["ana@example.com", ...] (blocklist already filtered out)
   raw_sections  jsonb not null,          -- {hints} raw wishes text — private!
   masked_hints  jsonb not null,          -- {hints: [...], exact: []} — what recipients receive (after sender's edits)
@@ -26,8 +26,16 @@ create table if not exists hint_requests (
   requester_name  text not null,
   requester_email text,
   target_email   text not null,
-  occasion       text not null check (occasion in ('christmas','birthday','other'))
+  occasion       text not null check (occasion in ('christmas','birthday','valentine','other'))
 );
+
+-- Upgrade: allowed occasions (Valentine's Day added Oct 2026). Safe to re-run.
+alter table hint_submissions drop constraint if exists hint_submissions_occasion_check;
+alter table hint_submissions add constraint hint_submissions_occasion_check
+  check (occasion in ('christmas','birthday','valentine','other'));
+alter table hint_requests drop constraint if exists hint_requests_occasion_check;
+alter table hint_requests add constraint hint_requests_occasion_check
+  check (occasion in ('christmas','birthday','valentine','other'));
 
 -- Upgrade for databases created before requester_email existed (safe to re-run).
 alter table hint_requests add column if not exists requester_email text;
