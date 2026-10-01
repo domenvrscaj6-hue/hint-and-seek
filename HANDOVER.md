@@ -10,7 +10,7 @@
 Hint & Seek is a small web app that solves gift-giving two ways:
 
 - **Give a hint (push):** a person writes their wishes (specific is good — brands, models,
-  sizes) and chooses recipients and an occasion (Christmas / Birthday / Other). An LLM
+  sizes) and chooses recipients and an occasion (Christmas / Birthday / Valentine's Day / Other). An LLM
   (Google Gemini) masks the wishes into gentle hints — nudges toward an activity or need that never name
   the item itself (not just the brand removed); recipients never see the
   raw text. The person reviews and edits the hints, confirms via an email link, and only
@@ -194,7 +194,10 @@ are currently NOT a priority.)
   email confirmation.
 - Keep the zero-dependency + single-file-frontend constraints unless the user
   explicitly agrees to change them.
-- When you change behaviour, update README.md and this file in the same commit. README.md is in English.
+- When you change behaviour, update README.md and this file in the same commit.
+- Adding an occasion touches: `OCCASIONS` in `lib/validate.js` and `index.html`, both `<select>`s,
+  `THEMES` + `occasionText` in `lib/emails.js`, and the two occasion CHECK constraints in `schema.sql`
+  (re-run `schema.sql` in Supabase BEFORE deploying, or inserts with the new value fail). README.md is in English.
 - The user is not a professional developer: explain changes simply, give exact
   copy-paste commands, and prefer small verifiable steps.
 

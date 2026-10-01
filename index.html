@@ -737,6 +737,7 @@
         <select id="give-occasion">
           <option value="christmas">Christmas</option>
           <option value="birthday">Birthday</option>
+          <option value="valentine">Valentine's Day</option>
           <option value="other">Other occasion</option>
         </select>
       </div>
@@ -829,6 +830,7 @@
           <select id="get-occasion">
             <option value="christmas">Christmas</option>
             <option value="birthday">Birthday</option>
+            <option value="valentine">Valentine's Day</option>
             <option value="other">Other occasion</option>
           </select>
         </div>
@@ -984,11 +986,13 @@
   });
   $("preview-back").addEventListener("click", function(){ show("view-give"); });
 
+  var OCCASIONS = ["christmas","birthday","valentine","other"]; // same list as lib/validate.js
+
   /* deep links: ?flow=give&occasion=christmas (used by invite emails) */
   var params = new URLSearchParams(location.search);
   if(params.get("flow") === "give"){
     var occ = params.get("occasion");
-    if(occ && ["christmas","birthday","other"].indexOf(occ) !== -1){ $("give-occasion").value = occ; }
+    if(occ && OCCASIONS.indexOf(occ) !== -1){ $("give-occasion").value = occ; }
     show("view-give", { replace: true });
   } else if(params.get("flow") === "get"){
     show("view-get", { replace: true });
@@ -1040,7 +1044,6 @@
   var DRAFT_KEY = "hs-give-draft-v1";
   var DRAFT_MAX_AGE = 60 * 24 * 3600 * 1000;
   var DRAFT_FIELDS = { name:"give-name", senderEmail:"give-sender-email", occasion:"give-occasion", wishes:"wishes", notes:"give-notes" };
-  var OCCASIONS = ["christmas","birthday","other"];
   var draftTimer = null;
 
   function clearDraft(){ try{ localStorage.removeItem(DRAFT_KEY); }catch(e){} }

@@ -59,7 +59,7 @@ api/unsubscribe.js   → signed opt-out link → blocklist
 api/feedback.js      → feedback widget → email to the site owner
 api/track.js         → anonymous page views (analytics)
 lib/gemini.js        → Gemini call with automatic model fallback + scrub filter (no brands)
-lib/emails.js        → 3 themed templates (Christmas / birthday / other) + invite + confirmation email + Resend
+lib/emails.js        → 4 themed templates (Christmas / birthday / Valentine's Day / other) + invite + confirmation email + Resend
 lib/store.js         → Supabase (REQUIRED in this version: without it nothing is sent)
 lib/security.js      → HMAC signatures for unsubscribe, token generation
 lib/validate.js      → strict validation (everything required except the "Anything specific?" note)
