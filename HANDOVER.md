@@ -73,8 +73,18 @@ see only hints, so choosing the gift stays theirs and the surprise survives.
   - `api/unsubscribe.js` — HMAC-signed opt-out (GET shows a button, POST) → blocklist
   - `api/feedback.js` — feedback widget → email to the site owner
 - Gemini with **automatic model fallback** (`lib/gemini.js`): on 404 / 429 / 503 or unparseable output the next
-  model in `FALLBACK_MODELS` is tried (`GEMINI_MODEL` or `gemini-3.5-flash` →
-  `gemini-3-flash-preview` → `gemini-2.5-flash-lite` → `gemini-2.0-flash-001`).
+  model in `FALLBACK_MODELS` is tried (`GEMINI_MODEL` or `gemini-3.6-flash` →
+  `gemini-3.5-flash` → `gemini-3-flash-preview` → `gemini-2.5-flash`).
+- Wish → hint prompt (Oct 2026, chosen on a 30-wish test set, `scripts/eval-hints.mjs`): one numbered
+  wish per line in, one item per wish out (`avoid` words, `area`, `hint`) — no merging. The hint is
+  written from the area, never the item. A hint that still contains one of its `avoid` words is
+  rewritten once (`rewriteLiteral()`). Findings: item-specific examples in the prompt get copied
+  word for word (don't add them); "analyse, then write without seeing the wish" made hints vague and
+  advert-like; telling the model to name the area explicitly made the lite model too literal.
+  Run the eval after every prompt change and read the hints yourself.
+- The Gemini key must have **billing enabled**: free tier = ~20 requests per model per day (the
+  site becomes slow / fails once used up), and free-tier data may be used by Google, while
+  `privacy.html` promises the paid API.
 - Emails (`lib/emails.js`): three occasion themes, inline-styled HTML; hint emails list the
   "✦" hints and the sender's note; confirmation email warns the sender that recipients
   should check their spam folder. Hint and invite emails carry RFC 8058 one-click
@@ -119,7 +129,7 @@ Limits: max 20 recipients, 3000 chars of wishes, max 8 hints, 160 chars per hint
 | Var | Required | Notes |
 |---|---|---|
 | `GEMINI_API_KEY` | yes | Google AI Studio key |
-| `GEMINI_MODEL` | no | first model to try; default `gemini-3.5-flash`, fallbacks follow automatically |
+| `GEMINI_MODEL` | no | first model to try; default `gemini-3.6-flash`, fallbacks follow automatically |
 | `RESEND_API_KEY` | yes | resend.com |
 | `EMAIL_FROM` | yes | `Hint & Seek <hints@domain.com>`; domain needs SPF + DKIM in Resend |
 | `SITE_URL` | yes | `https://www.hintandseek.com` — used in confirm / unsubscribe / invite links (trailing slash stripped by `siteUrlFrom()`) |

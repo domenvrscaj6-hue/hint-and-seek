@@ -66,6 +66,7 @@ lib/validate.js      → strict validation (everything required except the "Anyt
 lib/ratelimit.js     → per-IP rate limiting (counter in Supabase, IP stored only as a hash)
 lib/analytics.js     → anonymous analytics in Supabase (no cookies, IPs, emails or wishes)
 schema.sql           → Supabase tables
+scripts/eval-hints.mjs → checks hint quality on 30 test wishes (scripts/hint-cases.mjs); needs GEMINI_API_KEY
 HANDOVER.md          → handover document for further development (for you and for AI assistants)
 ```
 
@@ -85,9 +86,12 @@ HANDOVER.md          → handover document for further development (for you and 
 2. **Vercel:** Add New → Project → pick the repository → Deploy.
 3. **Environment variables** (Vercel → Settings → Environment Variables):
    - `GEMINI_API_KEY`: your Gemini key
-   - `GEMINI_MODEL`: optional; the first model to try (default `gemini-3.5-flash`).
-     If it returns 429 or 404, `gemini-3-flash-preview`, `gemini-2.5-flash-lite` and
-     `gemini-2.0-flash-001` are tried automatically.
+   - `GEMINI_MODEL`: optional; the first model to try (default `gemini-3.6-flash`).
+     If it returns 429, 404 or 503, `gemini-3.5-flash`, `gemini-3-flash-preview` and
+     `gemini-2.5-flash` are tried automatically.
+     **Use a key with billing enabled** (Google AI Studio → Billing). A free-tier key allows only
+     ~20 requests per model per day, makes the site slow once that runs out, and Google may use
+     free-tier data to improve its models (the privacy page promises the paid API).
    - `RESEND_API_KEY`: from resend.com
    - `EMAIL_FROM`: e.g. `Hint & Seek <hints@yourdomain.com>`
    - `SITE_URL`: `https://www.hintandseek.com` (used in the confirm / unsubscribe / invite links;
