@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Hint &amp; Seek — gift hints, the old-fashioned way</title>
-<meta name="description" content="Gift hints without spoiling the surprise. Write your wishes, AI turns them into gentle hints, and only the people you choose receive them.">
+<title>Hint &amp; Seek — tell your people what you'd love</title>
+<meta name="description" content="Write down what you need, want and like, and send it to the people you choose in one click — a neat wish list by email and on their phone.">
 <meta name="theme-color" content="#2e2318">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
@@ -13,8 +13,8 @@
 <meta property="og:url" content="https://www.hintandseek.com/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Hint &amp; Seek">
-<meta property="og:title" content="Hint &amp; Seek — gift hints, the old-fashioned way">
-<meta property="og:description" content="Gift hints without spoiling the surprise. Wishes in, gentle hints out.">
+<meta property="og:title" content="Hint &amp; Seek — tell your people what you'd love">
+<meta property="og:description" content="One simple wish list, sent to everyone in one click.">
 <meta property="og:image" content="https://www.hintandseek.com/og-image.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -447,7 +447,10 @@
   }
   .example-note .hand{display:block;font-size:23px;line-height:1.2;margin-top:4px}
   .example-note.wish .hand{color:var(--ink-soft)}
-  .example-note.hint .hand::before{content:"✦ ";color:var(--seal);font-size:.7em;vertical-align:.12em}
+  .example-key{color:var(--seal)}
+  .example-group{display:block;margin-top:6px;font-size:12px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--seal)}
+  .example-list{list-style:none;margin-top:0}
+  .example-list li::before{content:"✦ ";color:var(--seal);font-size:.7em;vertical-align:.12em}
   .example-arrow{font-size:28px;color:var(--seal)}
   @media (max-width:560px){
     .choice{max-width:none}
@@ -487,34 +490,6 @@
     .sheet > .sheet-seal{width:62px;height:62px;font-size:30px;top:-16px;right:-8px}
     .sheet-seal::before{inset:6px}
   }
-
-  /* ---------- progress while the AI writes the hints ---------- */
-  .progress{max-width:340px;margin:18px auto 0;text-align:center}
-  .progress-track{
-    height:8px;border-radius:6px;overflow:hidden;
-    background:var(--chip);border:1px solid var(--rule);
-  }
-  .progress-fill{
-    height:100%;width:0;border-radius:6px;
-    background:
-      repeating-linear-gradient(-45deg, rgba(255,255,255,.18) 0 8px, transparent 8px 16px),
-      var(--seal);
-    background-size:22.6px 100%, auto;
-    animation:progressStripes .8s linear infinite;
-    transition:width .3s ease;
-  }
-  @keyframes progressStripes{to{background-position:22.6px 0, 0 0}}
-  .progress-text{margin-top:8px;font-size:15px;font-style:italic;color:var(--ink-soft)}
-
-  /* ---------- saved draft ---------- */
-  .draft-notice{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:6px 14px}
-  .draft-notice .link-btn{font-size:15px;color:var(--seal);padding:0}
-  .draft-status{
-    display:flex;align-items:center;justify-content:center;gap:6px;
-    margin-top:14px;min-height:20px;
-    font-size:14px;font-style:italic;color:var(--pencil);
-  }
-  .draft-status .icon{font-size:15px;color:var(--seal)}
 
   /* ---------- notices ---------- */
   .notice{
@@ -660,7 +635,7 @@
     <svg class="underline-squiggle" viewBox="0 0 210 12" fill="none" aria-hidden="true">
       <path d="M3 8 C 40 2, 75 11, 106 6 S 175 3, 207 7" stroke="#a4443a" stroke-width="2.4" stroke-linecap="round"/>
     </svg>
-    <p class="tagline">Better gifts, without spoiling the surprise.</p>
+    <p class="tagline">Tell your people what you'd love — in one simple list.</p>
 
     <div class="choices">
       <button class="choice" id="btn-give" type="button">
@@ -668,7 +643,7 @@
           <span class="choice-icon" aria-hidden="true"><svg class="icon"><use href="#i-pen"/></svg></span>
           <span class="hand">Give a hint</span>
         </span>
-        <span class="choice-text">Write down what you truly need, want and like. We turn it into gentle hints and mail them to the people you choose.</span>
+        <span class="choice-text">Write down what you need, want and like. We tidy it into a neat list and send it to the people you choose.</span>
         <span class="choice-cta"><span id="give-cta-text">Start writing</span> <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></span>
       </button>
       <button class="choice" id="btn-get" type="button">
@@ -676,8 +651,8 @@
           <span class="choice-icon" aria-hidden="true"><svg class="icon"><use href="#i-search"/></svg></span>
           <span class="hand">Get a hint</span>
         </span>
-        <span class="choice-text">Buying a gift for someone and out of ideas? We'll kindly ask them for hints on your behalf — the surprise stays safe.</span>
-        <span class="choice-cta">Ask for hints <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></span>
+        <span class="choice-text">Buying a gift for someone and out of ideas? We'll kindly ask them for their wish list — it comes straight back to you.</span>
+        <span class="choice-cta">Ask for their list <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></span>
       </button>
     </div>
 
@@ -687,29 +662,30 @@
         <li class="step">
           <span class="step-stamp" aria-hidden="true"><svg class="icon"><use href="#i-pen"/></svg><span class="step-num">1</span></span>
           <span class="step-name">You write</span>
-          <span class="step-label">your wishes, as exact as you like</span>
+          <span class="step-label">with a little help from needs, wants and likes</span>
         </li>
         <li class="step">
-          <span class="step-stamp" aria-hidden="true"><svg class="icon"><use href="#i-lock"/></svg><span class="step-num">2</span></span>
-          <span class="step-name">AI masks</span>
-          <span class="step-label">each wish into a gentle nudge, not the item</span>
+          <span class="step-stamp" aria-hidden="true"><svg class="icon"><use href="#i-check"/></svg><span class="step-num">2</span></span>
+          <span class="step-name">We tidy</span>
+          <span class="step-label">into a neat, grouped list — nothing changed</span>
         </li>
         <li class="step">
           <span class="step-stamp" aria-hidden="true"><svg class="icon"><use href="#i-envelope"/></svg><span class="step-num">3</span></span>
-          <span class="step-name">They guess</span>
-          <span class="step-label">your people get hints, not a shopping list</span>
+          <span class="step-name">They pick</span>
+          <span class="step-label">by email or on their phone, whenever they shop</span>
         </li>
       </ol>
 
-      <figure class="example" aria-label="Example: a wish and the hint made from it">
+      <figure class="example" aria-label="Example: a line you write and the list your people get">
         <div class="example-note wish">
-          <span class="example-tag"><svg class="icon" aria-hidden="true"><use href="#i-lock"/></svg>You write</span>
-          <span class="hand">Sony WH-1000XM5 headphones</span>
+          <span class="example-tag"><svg class="icon" aria-hidden="true"><use href="#i-pen"/></svg>You write</span>
+          <span class="hand"><span class="example-key">needs:</span> warm slippers, a comb (wide teeth), hair wax</span>
         </div>
         <svg class="icon example-arrow" aria-hidden="true"><use href="#i-arrow"/></svg>
         <div class="example-note hint">
-          <span class="example-tag"><svg class="icon" aria-hidden="true"><use href="#i-envelope"/></svg>They read</span>
-          <span class="hand">Something to make the daily commute a lot more peaceful</span>
+          <span class="example-tag"><svg class="icon" aria-hidden="true"><use href="#i-envelope"/></svg>They get</span>
+          <span class="example-group">Needs</span>
+          <ul class="example-list hand"><li>Warm slippers</li><li>A comb (wide teeth)</li><li>Hair wax</li></ul>
         </div>
       </figure>
     </div>
@@ -719,7 +695,7 @@
   <section id="view-give" class="hidden">
     <div class="back-row"><button class="link-btn js-back" type="button">← back</button></div>
     <h2>Give a hint</h2>
-    <p class="lead">Fill this in like a letter. Your wishes are turned into gentle hints, and you'll check every one before anything is sent.</p>
+    <p class="lead">Fill this in like a letter. You'll see the finished list before anything is sent.</p>
     <div class="notice hidden" id="give-invite-note"></div>
     <div class="notice draft-notice hidden" id="draft-notice">
       <span id="draft-notice-text"></span>
@@ -747,7 +723,7 @@
       </div>
 
       <div class="field">
-        <label for="give-emails">Send hints to</label>
+        <label for="give-emails">Send your list to</label>
         <p class="hint-text">Press Enter after each address · up to 20 people.</p>
         <div class="chips" id="chips">
           <input type="email" id="give-emails" placeholder="name@example.com" inputmode="email">
@@ -769,7 +745,7 @@
 
       <div class="field">
         <label for="wishes">Your wishes</label>
-        <p class="hint-text" style="margin-bottom:0">One wish per line — or group them, like <em>needs: slippers, a comb, hair wax</em>. Brands and exact products become gentle hints; general wishes stay as you write them.</p>
+        <p class="hint-text" style="margin-bottom:0">One wish per line — or group them, like <em>needs: slippers, a comb, hair wax</em>. Sizes, colours and brands are welcome: your people see it just as you write it.</p>
         <div class="inspire">
           <span class="inspire-label">Stuck? Start a line with</span>
           <span class="inspire-tags" id="inspire-tags"></span>
@@ -781,9 +757,9 @@
       </div>
 
       <div class="field">
-        <label for="give-notes">Anything specific? <span style="font-weight:400">(optional)</span></label>
-        <p class="hint-text">Added to the end of the email <strong>word-for-word</strong> — this part is <em>not</em> masked.</p>
-        <textarea id="give-notes" class="small" placeholder="e.g. Please, no scented candles this year!&#10;The one book I'd love: Brave New World by Aldous Huxley"></textarea>
+        <label for="give-notes">A personal note <span style="font-weight:400">(optional)</span></label>
+        <p class="hint-text">Added at the end of the email — anything your people should know.</p>
+        <textarea id="give-notes" class="small" placeholder="e.g. Please, no scented candles this year!&#10;Money is welcome too — I'm saving for a new bike."></textarea>
       </div>
 
       <p class="draft-status" id="draft-status" aria-live="polite"></p>
@@ -791,11 +767,7 @@
       <div class="notice error hidden" id="give-error"></div>
 
       <div class="btn-row">
-        <button class="stamp-btn" id="give-preview-btn" type="submit">Preview the hints</button>
-      </div>
-      <div class="progress hidden" id="mask-progress" role="status" aria-live="polite">
-        <div class="progress-track"><div class="progress-fill" id="mask-progress-fill"></div></div>
-        <p class="progress-text" id="mask-progress-text"></p>
+        <button class="stamp-btn" id="give-preview-btn" type="submit">Preview your list</button>
       </div>
     </form>
   </section>
@@ -803,8 +775,8 @@
   <!-- ============ VIEW: GIVE A HINT (step 2: preview) ============ -->
   <section id="view-preview" class="hidden">
     <div class="back-row"><button class="link-btn" id="preview-back" type="button">← edit wishes</button></div>
-    <h2>Check the hints</h2>
-    <p class="lead">This is exactly what your people will receive — your original words stay private. Edit, add or remove any hint — just keep at least one.</p>
+    <h2>Check your list</h2>
+    <p class="lead">This is exactly what your people will receive. Edit, add or remove anything — just keep at least one wish.</p>
 
     <div id="preview-sections"></div>
 
@@ -812,7 +784,7 @@
     <div class="notice error hidden" id="preview-error"></div>
 
     <div class="btn-row">
-      <button class="stamp-btn" id="preview-send" type="button">Send the hints</button>
+      <button class="stamp-btn" id="preview-send" type="button">Send the list</button>
     </div>
   </section>
 
@@ -820,7 +792,7 @@
   <section id="view-get" class="hidden">
     <div class="back-row"><button class="link-btn js-back" type="button">← back</button></div>
     <h2>Get a hint</h2>
-    <p class="lead">Tell us who you're shopping for. We'll send them a friendly note asking for a few hints — directions, not exact wishes, so the surprise stays safe for both of you.</p>
+    <p class="lead">Tell us who you're shopping for. We'll send them a friendly note asking for their wish list — and it comes straight back to you.</p>
 
     <form id="form-get" novalidate>
       <input type="text" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-5000px" aria-hidden="true">
@@ -865,7 +837,7 @@
       <div class="notice error hidden" id="get-error"></div>
 
       <div class="btn-row">
-        <button class="stamp-btn" id="get-send" type="submit">Ask for hints</button>
+        <button class="stamp-btn" id="get-send" type="submit">Ask for their list</button>
       </div>
     </form>
   </section>
@@ -885,8 +857,8 @@
 </main>
 
 <footer>
-  Hint &amp; Seek never shows your exact wishes to gift-givers. Recipient emails are used only for delivery,
-  and every email includes a one-click way to opt out of future notes.
+  Recipient emails are used only for delivery, and every email includes a one-click way
+  to opt out of future notes.
   <br><a class="footer-link" href="/privacy.html">Privacy policy</a>
 </footer>
 
@@ -916,8 +888,6 @@
   /* ---------- state ---------- */
   var emails = [];
   var MAX_EMAILS = 20;
-  var previewIsDemo = false;
-  var maskBrands = [];   // brand names Gemini found — sent back so the server can re-check edited hints
 
   /* ---------- inspiration tags ---------- */
   var inspireTags = ["needs", "wants", "likes", "craves", "dreams of", "is into", "enjoys", "hobbies"];
@@ -1161,7 +1131,7 @@
     if(emails.indexOf(to) === -1) emails.push(to);
     renderChips();
     var note = $("give-invite-note");
-    note.textContent = (from || "Someone") + " asked you for a few gift hints — their email (" + to +
+    note.textContent = (from || "Someone") + " asked you for your wish list — their email (" + to +
       ") is already added below. Add anyone else you like.";
     note.classList.remove("hidden");
   })();
@@ -1186,10 +1156,10 @@
   function giveValidationError(){
     var name = $("give-name").value.trim();
     var senderEmail = $("give-sender-email").value.trim();
-    if(name.length < 2) return "Please write your name — your people should know who the hints are from.";
+    if(name.length < 2) return "Please write your name — your people should know who the list is from.";
     if(!isEmail(senderEmail)) return "Add your email — we send you a confirmation link before anything goes out.";
-    if(emails.length === 0) return "Add at least one email address to send the hints to.";
-    if(!wishes.value.trim()) return "Write at least one wish — the AI turns it into a gentle hint.";
+    if(emails.length === 0) return "Add at least one email address to send your list to.";
+    if(!wishes.value.trim()) return "Write at least one wish.";
     return null;
   }
 
@@ -1205,6 +1175,57 @@
     };
   }
 
+  /* ---------- wish list: tidied into groups right here in the browser (no AI, instant) ----------
+     "needs: slippers, a comb (for curly hair), hair wax" → group "Needs" with three items.
+     Commas inside brackets don't split. Lines with the same tag share a group; lines without a
+     tag form one unlabeled group. Max 30 items / 12 groups (same as lib/validate.js). */
+  var TAG_NAMES = { "needs":"Needs", "wants":"Wants", "likes":"Likes", "craves":"Craves",
+                    "dreams of":"Dreams of", "is into":"Is into", "enjoys":"Enjoys", "hobbies":"Hobbies" };
+  var KEEP_TOGETHER = { "Hobbies": true }; // "fitness, running, basketball" reads best as one line
+  function splitItems(text){
+    var out = [], cur = "", depth = 0;
+    for(var i = 0; i < text.length; i++){
+      var c = text.charAt(i);
+      if(c === "(" || c === "[") depth++;
+      else if((c === ")" || c === "]") && depth > 0) depth--;
+      if((c === "," || c === ";") && depth === 0){ out.push(cur); cur = ""; } else cur += c;
+    }
+    out.push(cur);
+    return out;
+  }
+  /* "Nike Pegasus 41, size 42" is ONE wish: a part that is only a detail (size, colour, number)
+     stays with the wish before it */
+  var DETAIL_PREFIX = /^\s*(size|sizes|velikost|velikosti|št\.|številka|stevilka|color|colour|barva|v barvi)\b/i;
+  var DETAIL_WHOLE = /^\s*(xxs|xs|s|m|l|xl|xxl|xxxl|\d+([.,]\d+)?\s*(cm|mm|ml|l|eu|us|uk)?|black|white|blue|red|green|grey|gray|pink|beige|brown|navy|črn[aoi]?|bel[aoi]?|moder|modr[aoi]|rdeč[aoi]?|zelen[aoi]?|siv[aoi]?|roza|rjav[aoi]?)\s*$/i;
+  function joinDetails(parts){
+    var out = [];
+    parts.forEach(function(p){
+      if(out.length && p.trim() && (DETAIL_PREFIX.test(p) || DETAIL_WHOLE.test(p))) out[out.length - 1] += "," + p;
+      else out.push(p);
+    });
+    return out;
+  }
+  function tidyItem(item){
+    var t = item.replace(/\s+/g, " ").trim().replace(/^[-•*·]+\s*/, "").replace(/[.,;:\s]+$/, "");
+    return t ? (t.charAt(0).toUpperCase() + t.slice(1)).slice(0, 160) : "";
+  }
+  function parseWishList(text){
+    var groups = [], byLabel = {}, total = 0;
+    String(text).split(/\n+/).forEach(function(raw){
+      var line = raw.replace(/^\s*(?:[-•*·]|\d+[.)])\s*/, "").trim();
+      if(!line) return;
+      var label = "", m = line.match(/^(needs|wants|likes|craves|dreams of|is into|enjoys|hobbies)\s*:\s*(.*)$/i);
+      if(m){ label = TAG_NAMES[m[1].toLowerCase()]; line = m[2]; }
+      var items = (KEEP_TOGETHER[label] ? [line] : joinDetails(splitItems(line))).map(tidyItem).filter(Boolean);
+      if(!items.length) return;
+      var g = byLabel[label];
+      if(!g){ g = byLabel[label] = { label: label, hints: [] }; groups.push(g); }
+      items.forEach(function(it){ if(total < 30){ g.hints.push(it); total++; } });
+    });
+    groups = groups.filter(function(g){ return g.hints.length; }).slice(0, 12);
+    return { hints: groups.reduce(function(all, g){ return all.concat(g.hints); }, []), groups: groups };
+  }
+
   /* ---------- step 1 → preview ---------- */
   $("form-give").addEventListener("submit", function(e){
     e.preventDefault();
@@ -1214,87 +1235,14 @@
     var problem = giveValidationError();
     if(problem){ setError("give-error", problem); return; }
 
-    var btn = $("give-preview-btn");
-    btn.disabled = true;
-    var original = btn.textContent;
-    btn.textContent = "Turning wishes into hints…";
-    var progress = startProgress();
-
-    fetch("/api/mask", {
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify(givePayload())
-    }).then(function(res){
-      if(!res.ok){ return apiError(res); }
-      return res.json();
-    }).then(function(data){
-      previewIsDemo = false;
-      maskBrands = data.brands || [];
-      $("preview-note").classList.add("hidden");
-      renderPreview(data.hints);
-      return progress.finish().then(function(){ show("view-preview"); });
-    }).catch(function(err){
-      progress.stop();
-      if(err instanceof TypeError){
-        // static preview without the backend → show example hints
-        previewIsDemo = true;
-        var note = $("preview-note");
-        note.textContent = "Preview mode: the backend isn't connected yet, so these are example hints — once deployed, your real wishes are masked here.";
-        note.classList.remove("hidden");
-        renderPreview({
-          hints: ["(example) Warm socks for winter runs", "(example) Something for a slow coffee-lover's morning"]
-        });
-        show("view-preview");
-      } else {
-        setError("give-error", err.message);
-      }
-    }).finally(function(){
-      progress.stop();
-      btn.disabled = false;
-      btn.textContent = original;
-    });
+    var list = parseWishList(wishes.value);
+    if(!list.hints.length){ setError("give-error", "Write at least one wish."); return; }
+    renderPreview(list);
+    show("view-preview");
   });
 
-  /* ---------- progress bar while /api/mask runs ----------
-     We can't know how long the AI takes, so the bar eases towards 92 %
-     and jumps to 100 % when the answer arrives. */
-  var PROGRESS_STEPS = [
-    [0,     "Reading your wishes…"],
-    [2500,  "Hiding brands and models…"],
-    [6000,  "Thinking of gentle hints…"],
-    [12000, "Almost there — polishing the wording…"],
-    [22000, "Still working — the AI is a little busy right now…"]
-  ];
-  function startProgress(){
-    var box = $("mask-progress"), fill = $("mask-progress-fill"), text = $("mask-progress-text");
-    var t0 = Date.now();
-    fill.style.width = "0%";
-    box.classList.remove("hidden");
-    function tick(){
-      var t = Date.now() - t0;
-      fill.style.width = (92 * (1 - Math.exp(-t / 7000))).toFixed(1) + "%";
-      var msg = PROGRESS_STEPS[0][1];
-      PROGRESS_STEPS.forEach(function(s){ if(t >= s[0]) msg = s[1]; });
-      if(text.textContent !== msg) text.textContent = msg;
-    }
-    tick();
-    var timer = setInterval(tick, 200);
-    return {
-      finish: function(){
-        clearInterval(timer);
-        fill.style.width = "100%";
-        text.textContent = "Done!";
-        return new Promise(function(r){ setTimeout(r, 350); });
-      },
-      stop: function(){
-        clearInterval(timer);
-        box.classList.add("hidden");
-      }
-    };
-  }
+  var generatedCount = 0; // how many wishes the preview started with (for the anonymous edit counts)
 
-  /* ---------- preview rendering & editing ---------- */
-  var generatedCount = 0;
   /* hints = { hints: [...], groups?: [{ label, hints: [...] }] } — one group per wish line
      ("Needs", "Would love", …). Old / demo data without groups shows as one plain list. */
   function renderPreview(hints){
@@ -1306,12 +1254,12 @@
 
     var h = document.createElement("h3");
     h.className = "section-title";
-    h.textContent = "Your hints";
+    h.textContent = "Your wish list";
     wrap.appendChild(h);
     var sub = document.createElement("p");
     sub.className = "hint-text";
     sub.style.marginTop = "0";
-    sub.textContent = "Wishes with a brand or exact product became gentle hints; general ones stay as you wrote them. Edit anything you like.";
+    sub.textContent = "Sorted into groups from what you wrote — change anything you like.";
     wrap.appendChild(sub);
 
     groups.forEach(function(g){
@@ -1335,7 +1283,7 @@
       block.appendChild(list);
       var add = document.createElement("button");
       add.type = "button"; add.className = "add-hint";
-      add.textContent = "+ add a hint";
+      add.textContent = "+ add a wish";
       add.addEventListener("click", function(){
         var row = hintRow("", "✦", "star");
         list.appendChild(row);
@@ -1354,10 +1302,10 @@
     bulletSpan.textContent = bullet;
     var input = document.createElement("input");
     input.type = "text"; input.value = text; input.maxLength = 160;
-    input.setAttribute("aria-label","Hint");
+    input.setAttribute("aria-label","Wish");
     var del = document.createElement("button");
     del.type = "button"; del.className = "del-hint"; del.textContent = "✕";
-    del.setAttribute("aria-label","Remove this hint");
+    del.setAttribute("aria-label","Remove this wish");
     del.addEventListener("click", function(){ row.remove(); });
     row.appendChild(bulletSpan); row.appendChild(input); row.appendChild(del);
     return row;
@@ -1373,7 +1321,7 @@
     return { hints: groups.reduce(function(all, g){ return all.concat(g.hints); }, []), groups: groups };
   }
 
-  /* anonymous counts of how the sender changed the AI hints (no text is sent) */
+  /* anonymous counts of how the sender changed the tidied list in the preview (no text is sent) */
   function editStats(){
     var st = { generated:0, kept:0, edited:0, deleted:0, added:0 };
     st.generated = generatedCount;
@@ -1393,24 +1341,19 @@
     setError("preview-error", null);
     var hints = collectHints();
     if(hints.hints.length === 0){
-      setError("preview-error", "There are no hints left — you need at least one.");
-      return;
-    }
-    if(previewIsDemo){
-      setError("preview-error", "Preview mode: the backend isn't connected yet, so nothing was actually sent. Once deployed (see README), this sends you a confirmation email first.");
+      setError("preview-error", "Your list is empty — keep at least one wish.");
       return;
     }
 
     var payload = givePayload();
     payload.hints = hints;
     payload.editStats = editStats();
-    payload.brands = maskBrands;
 
     send("/api/give-hint", payload, $("preview-send"), "preview-error", function(){
       $("postmark-word").textContent = "Almost!";
       $("success-title").textContent = "One click to go";
       $("success-text").textContent = "We've emailed a confirmation link to " + payload.senderEmail +
-        ". Your hints go out to " + payload.recipients.length +
+        ". Your list goes out to " + payload.recipients.length +
         (payload.recipients.length === 1 ? " person" : " people") +
         " only after you click it — until then, nothing is sent.";
       show("view-success");
@@ -1422,7 +1365,6 @@
     $("form-give").reset();
     syncWishes();
     emails = []; renderChips();
-    maskBrands = [];
     clearTimeout(draftTimer);
     clearDraft();
     setDraftStatus(false);

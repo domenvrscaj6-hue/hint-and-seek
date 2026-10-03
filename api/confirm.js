@@ -79,10 +79,10 @@ export default async function handler(req, res) {
       return res.status(404).send(page("Link not found", "This confirmation link doesn't exist. Nothing has been sent.", BAD));
     }
     if (found.status === "sent") {
-      return res.status(200).send(page("Already done", "These hints were already confirmed and sent — no need to click twice. 🙂", OK));
+      return res.status(200).send(page("Already done", "This list was already confirmed and sent — no need to click twice. 🙂", OK));
     }
     if (found.status !== "pending" || new Date(found.expires_at) < new Date()) {
-      return res.status(410).send(page("Link expired", "This link is no longer valid (links work once and expire after 48 hours). Nothing was sent — you can create the hints again on the site.", BAD));
+      return res.status(410).send(page("Link expired", "This link is no longer valid (links work once and expire after 48 hours). Nothing was sent — you can send your list again on the site.", BAD));
     }
 
     // ---------- GET: only show the button, never send ----------
@@ -91,9 +91,9 @@ export default async function handler(req, res) {
       const who = n === 1 ? "1 person" : `${n} people`;
       const form = `
   <form method="POST" action="/api/confirm?token=${token}" onsubmit="this.querySelector('button').disabled=true">
-    <button type="submit">Send the hints</button>
+    <button type="submit">Send the list</button>
   </form>`;
-      return res.status(200).send(page("Ready when you are", `Your hints will go to ${who}. Nothing is sent until you press the button.`, ASK, form));
+      return res.status(200).send(page("Ready when you are", `Your list will go to ${who}. Nothing is sent until you press the button.`, ASK, form));
     }
 
     // ---------- POST: atomically claim the submission (pending → sent) ----------
@@ -106,7 +106,7 @@ export default async function handler(req, res) {
     );
     const sub = claimedRows[0];
     if (!sub) {
-      return res.status(200).send(page("Already done", "These hints were already confirmed and sent — no need to click twice. 🙂", OK));
+      return res.status(200).send(page("Already done", "This list was already confirmed and sent — no need to click twice. 🙂", OK));
     }
 
     claimed = true;
@@ -116,7 +116,7 @@ export default async function handler(req, res) {
     const recipients = sub.recipients.filter(r => !blocked.has(r));
     if (recipients.length === 0) {
       await updateRows("hint_submissions", { token: `eq.${token}` }, { status: "failed" });
-      return res.status(422).send(page("Nothing to send", "Everyone on your list has opted out of Hint & Seek emails, so the hints could not be delivered.", BAD));
+      return res.status(422).send(page("Nothing to send", "Everyone on your list has opted out of Hint & Seek emails, so the list could not be delivered.", BAD));
     }
 
     const siteUrl = siteUrlFrom(req);
@@ -143,7 +143,7 @@ export default async function handler(req, res) {
       // release the claim → the sender can press the button again in a minute
       await updateRows("hint_submissions", { token: `eq.${token}` }, { status: "pending" }).catch(() => {});
       claimed = false;
-      return res.status(502).send(page("Delivery hiccup", "The hints were confirmed but no email could be delivered right now. Nothing was lost — open the link again in a few minutes.", BAD));
+      return res.status(502).send(page("Delivery hiccup", "The list was confirmed but no email could be delivered right now. Nothing was lost — open the link again in a few minutes.", BAD));
     }
 
     delivered = true;
@@ -156,7 +156,7 @@ export default async function handler(req, res) {
     const missed = failedTo.length
       ? ` We couldn't deliver to ${failedTo.map(esc).join(", ")} — please check ${failedTo.length === 1 ? "that address" : "those addresses"} and let them know yourself.`
       : "";
-    return res.status(200).send(page("The hints are on their way", `Your hints were just mailed to ${who}.${missed} Your exact wishes stay private — happy gifting! 🎁`, OK));
+    return res.status(200).send(page("Your list is on its way", `It was just mailed to ${who}.${missed} Happy gifting! 🎁`, OK));
   } catch (err) {
     console.error("[confirm]", err);
     // claimed but not delivered (e.g. the blocklist check failed) → release it, so the link still works
