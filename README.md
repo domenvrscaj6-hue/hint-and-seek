@@ -55,6 +55,7 @@ api/mask.js          → wishes → hints (Gemini), for the preview
 api/give-hint.js     → validation + storing as pending + confirmation email to the sender
 api/confirm.js       → confirmation link → sends the hints to the recipients
 api/get-hint.js      → pull flow: invite to the person you'd like hints from
+api/hints.js         → "save these hints" page from the hint email: card as a picture, send, copy
 api/unsubscribe.js   → signed opt-out link → blocklist
 api/feedback.js      → feedback widget → email to the site owner
 api/track.js         → anonymous page views (analytics)
@@ -66,6 +67,7 @@ lib/validate.js      → strict validation (everything required except the "Anyt
 lib/ratelimit.js     → per-IP rate limiting (counter in Supabase, IP stored only as a hash)
 lib/analytics.js     → anonymous analytics in Supabase (no cookies, IPs, emails or wishes)
 schema.sql           → Supabase tables
+scripts/eval-hints.mjs → checks hint quality on 30 test wishes (scripts/hint-cases.mjs); needs GEMINI_API_KEY
 HANDOVER.md          → handover document for further development (for you and for AI assistants)
 ```
 
@@ -85,9 +87,12 @@ HANDOVER.md          → handover document for further development (for you and 
 2. **Vercel:** Add New → Project → pick the repository → Deploy.
 3. **Environment variables** (Vercel → Settings → Environment Variables):
    - `GEMINI_API_KEY`: your Gemini key
-   - `GEMINI_MODEL`: optional; the first model to try (default `gemini-3.5-flash`).
-     If it returns 429 or 404, `gemini-3-flash-preview`, `gemini-2.5-flash-lite` and
-     `gemini-2.0-flash-001` are tried automatically.
+   - `GEMINI_MODEL`: optional; the first model to try (default `gemini-3.6-flash`).
+     If it returns 429, 404 or 503, `gemini-3.5-flash`, `gemini-3-flash-preview` and
+     `gemini-2.5-flash` are tried automatically.
+     **Use a key with billing enabled** (Google AI Studio → Billing). A free-tier key allows only
+     ~20 requests per model per day, makes the site slow once that runs out, and Google may use
+     free-tier data to improve its models (the privacy page promises the paid API).
    - `RESEND_API_KEY`: from resend.com
    - `EMAIL_FROM`: e.g. `Hint & Seek <hints@yourdomain.com>`
    - `SITE_URL`: `https://www.hintandseek.com` (used in the confirm / unsubscribe / invite links;
@@ -110,6 +115,8 @@ HANDOVER.md          → handover document for further development (for you and 
    - [ ] empty wishes → the form doesn't let you continue
    - [ ] half-filled form → close the tab → open the site again → "Continue your draft" brings everything back
    - [ ] unsubscribe link → page with a button → after the click, sending to that email again is refused
+   - [ ] hint email → "Save these hints to your phone" → the card shows the wisher's name; save / send / copy work on a phone
+   - [ ] Slovenian wishes give Slovenian hints
    - [ ] get flow: the invite arrives and its button opens the page with the right occasion
    - [ ] feedback widget: the message arrives at `FEEDBACK_TO`
    - [ ] "Preview" 6 times in a row within an hour → a friendly "take a little break" message
