@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Hint &amp; Seek — tell your people what you'd love</title>
-<meta name="description" content="Write down what you need, want and like, and send it to the people you choose in one click — a neat wish list by email and on their phone.">
+<meta name="description" content="Write down what you need, want and like, and send it to the people you choose in one click. Not sure what to buy? They get AI gift ideas for any wish, within their budget.">
 <meta name="theme-color" content="#2e2318">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
@@ -14,7 +14,7 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Hint &amp; Seek">
 <meta property="og:title" content="Hint &amp; Seek — tell your people what you'd love">
-<meta property="og:description" content="One simple wish list, sent to everyone in one click.">
+<meta property="og:description" content="One simple wish list, sent to everyone in one click — with AI gift ideas for whoever is stuck.">
 <meta property="og:image" content="https://www.hintandseek.com/og-image.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -430,6 +430,26 @@
 
   /* before → after example */
   .example{display:flex;align-items:center;gap:14px;margin-top:30px}
+  /* the AI gift-ideas extra, under the example */
+  .ai-extra{
+    margin-top:22px;padding:16px 18px 16px;
+    border:1.5px dashed var(--seal);border-radius:4px 6px 5px 7px;
+    background:rgba(164,68,58,.04);transform:rotate(-.4deg);
+  }
+  .ai-badge{
+    display:inline-flex;align-items:center;gap:6px;
+    font-size:12px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--seal-ink);background:var(--seal);border-radius:12px;padding:3px 10px 3px 8px;
+  }
+  .ai-badge .icon{font-size:15px}
+  .ai-title{font-family:'Caveat',cursive;font-size:26px;font-weight:700;line-height:1.1;margin-top:10px;color:var(--ink)}
+  .ai-text{font-size:16px;line-height:1.45;color:var(--ink-soft);margin-top:2px}
+  .ai-ideas{list-style:none;display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+  .ai-ideas li{
+    font-size:15px;color:var(--ink);background:var(--card);border:1px solid var(--rule);
+    border-radius:3px 5px 4px 6px;padding:4px 10px;box-shadow:0 1px 2px rgba(0,0,0,.08);
+  }
+  .ai-ideas li span{color:var(--seal);font-weight:600;margin-left:4px}
   .example-note{
     flex:1;
     background:var(--card);
@@ -487,7 +507,7 @@
     border:1.5px solid rgba(110,40,33,.75);
   }
   @media (max-width:560px){
-    .sheet > .sheet-seal{width:62px;height:62px;font-size:30px;top:-16px;right:-8px}
+    .sheet > .sheet-seal{width:62px;height:62px;font-size:30px;top:-16px;right:-4px}
     .sheet-seal::before{inset:6px}
   }
 
@@ -622,6 +642,7 @@
   <symbol id="i-envelope" viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="2"/><path d="M3.6 7.2l8.4 6.3 8.4-6.3"/></symbol>
   <symbol id="i-chat" viewBox="0 0 24 24"><path d="M5 4.5h14a2 2 0 0 1 2 2v8.5a2 2 0 0 1-2 2h-7.2L7 20.5V17H5a2 2 0 0 1-2-2V6.5a2 2 0 0 1 2-2z"/><path d="M7.5 9h9M7.5 12.5h6"/></symbol>
   <symbol id="i-close" viewBox="0 0 24 24"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3.5l1.9 5.1 5.1 1.9-5.1 1.9L12 17.5l-1.9-5.1L5 10.5l5.1-1.9z"/><path d="M18.5 15.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/></symbol>
   <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
   <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4.5 12h15M13.5 6l6 6-6 6"/></symbol>
 </svg>
@@ -651,7 +672,7 @@
           <span class="choice-icon" aria-hidden="true"><svg class="icon"><use href="#i-search"/></svg></span>
           <span class="hand">Get a hint</span>
         </span>
-        <span class="choice-text">Buying a gift for someone and out of ideas? We'll kindly ask them for their wish list — it comes straight back to you.</span>
+        <span class="choice-text">Buying a gift for someone and out of ideas? We'll kindly ask them for their wish list — and if you're still unsure, AI suggests gifts from it.</span>
         <span class="choice-cta">Ask for their list <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></span>
       </button>
     </div>
@@ -672,7 +693,7 @@
         <li class="step">
           <span class="step-stamp" aria-hidden="true"><svg class="icon"><use href="#i-envelope"/></svg><span class="step-num">3</span></span>
           <span class="step-name">They pick</span>
-          <span class="step-label">by email or on their phone, whenever they shop</span>
+          <span class="step-label">with AI gift ideas whenever they're stuck</span>
         </li>
       </ol>
 
@@ -688,6 +709,17 @@
           <ul class="example-list hand"><li>Warm slippers</li><li>A comb (wide teeth)</li><li>Hair wax</li></ul>
         </div>
       </figure>
+
+      <div class="ai-extra">
+        <span class="ai-badge"><svg class="icon" aria-hidden="true"><use href="#i-spark"/></svg>AI gift ideas</span>
+        <p class="ai-title">Stuck on “good board games”?</p>
+        <p class="ai-text">Your people tap any wish, set a budget and get three concrete ideas — only when they ask.</p>
+        <ul class="ai-ideas" aria-label="Example ideas for good board games, up to 30 €">
+          <li>7 Wonders Duel <span>~28 €</span></li>
+          <li>Codenames: Duet <span>~20 €</span></li>
+          <li>Patchwork <span>~22 €</span></li>
+        </ul>
+      </div>
     </div>
   </section>
 
