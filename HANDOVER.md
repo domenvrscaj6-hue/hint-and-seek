@@ -112,7 +112,7 @@ hints    (what is sent)   = { hints: ["masked hint", ...], exact: [] }   // exac
 special_notes             = "optional note, sent word-for-word"
 ```
 
-Limits: max 20 recipients, 3000 chars of wishes, max 8 hints, 160 chars per hint, 600 chars note.
+Limits: max 20 recipients, 3000 chars of wishes, max 8 hints, 160 chars per hint, 600 chars note. Previews (Gemini calls): 5 per IP per hour (`LIMITS.mask`).
 
 ## 4. Environment variables (Vercel → Settings)
 
