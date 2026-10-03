@@ -25,7 +25,10 @@ export default async function handler(req, res) {
         error: "We couldn't turn your wishes into safe hints — try rephrasing them (one wish per line works best)."
       });
     }
-    await track("mask_ok", { occasion: v.occasion, hints: masked.hints.length, groups: masked.groups.length });
+    await track("mask_ok", {
+      occasion: v.occasion, hints: masked.hints.length, groups: masked.groups.length,
+      specific: masked.stats?.specific ?? 0, general: masked.stats?.general ?? 0 // how many wishes were actually masked
+    });
     // brands go back to the browser so give-hint.js can re-check the user's edits against them
     return res.status(200).json({ ok: true, hints: { hints: masked.hints, groups: masked.groups }, brands: masked.brands });
   } catch (err) {

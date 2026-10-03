@@ -78,6 +78,7 @@ see only hints, so choosing the gift stays theirs and the surprise survives.
 - Gemini with **automatic model fallback** (`lib/gemini.js`): on 404 / 429 / 503 or unparseable output the next
   model in `FALLBACK_MODELS` is tried (`GEMINI_MODEL` or `gemini-3.6-flash` →
   `gemini-3.5-flash` → `gemini-3-flash-preview` → `gemini-2.5-flash`).
+- `mask_ok` analytics carry `specific` / `general` counts (how many wishes were really masked vs kept).
 - Wish → hint prompt (Oct 2026, chosen on a 30-wish test set, `scripts/eval-hints.mjs`): one numbered
   wish per line in, one item per wish out (`avoid` words, `area`, `hint`) — no merging. The hint is
   written from the area, never the item. A hint that still contains one of its `avoid` words is
@@ -89,8 +90,9 @@ see only hints, so choosing the gift stays theirs and the surprise survives.
   meaning and detail, only spelling/grammar fixed and put in the hint voice; "specific" ones (any brand,
   model, title, name) are masked. A branded wish the model calls "general" (e.g. "Nike long socks" →
   "long socks") is re-asked as specific (`redoMisread()`, guarded by `isGeneral()`).
-  Since Oct 2026 the output is GROUPED: one group per input line, labelled by its tag ("needs:" →
-  "Needs" / "Potrebno", "wants:" → "Would love" / "Zaželeno", …, untagged → ""), and every comma-separated
+  Since Oct 2026 the output is GROUPED: one group per tag, labelled with the English tag name in every
+  language ("Needs", "Wants", "Likes", … — `groupLabel()`; translate them when the site gets more
+  languages), lines with the same tag merged, untagged → "", and every comma-separated
   wish is its own item (people write "needs: slippers, a comb, hair wax"). Stored as
   `masked_hints = { hints: [flat], groups: [{label, hints}], exact: [] }` (max 30 hints / 12 groups,
   `MAX_HINTS` in lib/gemini.js + lib/validate.js); preview, emails and the save page render the groups,
