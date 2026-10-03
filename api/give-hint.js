@@ -39,7 +39,10 @@ export default async function handler(req, res) {
       error: `This hint still gives away “${first.word}”: “${first.hint}”. Please reword it (or remove it) — nothing was sent.`
     });
   }
-  const hints = { hints: clean, exact: [] };
+  // keep the groups ("Needs", "Would love", …) the sender saw in the preview; nothing leaked, so they're clean
+  const hints = h.hints.groups
+    ? { hints: h.hints.hints, groups: h.hints.groups, exact: [] }
+    : { hints: clean, exact: [] };
 
   try {
     // ---------- step 3: blocklist ----------

@@ -225,6 +225,20 @@
     resize:vertical;
   }
   textarea.small{min-height:calc(var(--line) * 3 + 2px)}
+
+  /* wishes box: a mirror behind the (transparent-text) textarea draws the same text with the
+     line tags (needs:, wants: …) coloured. Same font, padding and border, so they line up exactly;
+     the textarea grows with its content, so it never gets a scrollbar that would shift the wrap. */
+  .wish-pad{position:relative}
+  .wish-pad textarea{position:relative;z-index:1;color:transparent;caret-color:var(--ink);overflow:hidden;resize:none}
+  .wish-pad textarea::selection{background:rgba(164,68,58,.22);color:transparent}
+  .wish-mirror{
+    position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none;
+    border:1px solid transparent;padding:0 12px;
+    font-family:'Caveat', cursive;font-size:21px;line-height:32px;color:var(--ink);
+    white-space:pre-wrap;overflow-wrap:break-word;word-wrap:break-word;
+  }
+  .wish-tag{color:var(--seal);background:rgba(164,68,58,.1);border-radius:3px}
   textarea:hover{border-color:var(--pencil)}
   textarea:focus{
     outline:none;
@@ -291,6 +305,11 @@
   .inspire-tag:active{transform:translateY(1px)}
 
   /* ---------- preview hint rows ---------- */
+  .hint-group{margin-top:16px}
+  .hint-group-label{
+    font-size:13px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--seal);margin-bottom:2px;
+  }
   .hint-row{display:flex;gap:8px;align-items:center;margin-top:4px}
   .hint-row input{font-size:20px;flex:1}
   .del-hint{
@@ -445,24 +464,28 @@
 
   /* ---------- wax seal on the sheet corner ---------- */
   .sheet > .sheet-seal{
-    position:absolute;top:-22px;right:-22px;z-index:2;
-    width:70px;height:70px;border-radius:50%;
+    position:absolute;top:-28px;right:-28px;z-index:2;
+    width:86px;height:86px;border-radius:50%;text-decoration:none;cursor:pointer;
     display:flex;align-items:center;justify-content:center;
     background:radial-gradient(circle at 36% 30%, #c0594d 0%, #a4443a 48%, #85352c 100%);
     box-shadow:0 3px 8px rgba(0,0,0,.35), inset 0 -2px 4px rgba(0,0,0,.18);
     color:var(--seal-ink);
-    font-family:'EB Garamond',Georgia,serif;font-weight:600;font-size:34px;line-height:1;
+    font-family:'EB Garamond',Georgia,serif;font-weight:600;font-size:42px;line-height:1;
     text-shadow:0 1px 0 rgba(0,0,0,.25);
     transform:rotate(10deg);
-    pointer-events:none;
+    transition:transform .15s ease, box-shadow .15s ease;
   }
+  /* the seal is the home button */
+  .sheet > .sheet-seal:hover{transform:rotate(4deg) scale(1.06);box-shadow:0 5px 12px rgba(0,0,0,.4), inset 0 -2px 4px rgba(0,0,0,.18)}
+  .sheet > .sheet-seal:active{transform:rotate(10deg) scale(.96)}
+  .sheet > .sheet-seal:focus-visible{outline:2px dashed var(--seal);outline-offset:4px}
   .sheet-seal::before{ /* pressed inner ring */
-    content:"";position:absolute;inset:7px;border-radius:50%;
+    content:"";position:absolute;inset:9px;border-radius:50%;
     border:1.5px solid rgba(110,40,33,.75);
   }
   @media (max-width:560px){
-    .sheet > .sheet-seal{width:52px;height:52px;font-size:25px;top:-14px;right:-8px}
-    .sheet-seal::before{inset:5px}
+    .sheet > .sheet-seal{width:62px;height:62px;font-size:30px;top:-16px;right:-8px}
+    .sheet-seal::before{inset:6px}
   }
 
   /* ---------- progress while the AI writes the hints ---------- */
@@ -629,7 +652,7 @@
 </svg>
 
 <main class="sheet" id="sheet">
-  <div class="sheet-seal" aria-hidden="true">H</div>
+  <a class="sheet-seal" id="home-seal" href="/" aria-label="Hint &amp; Seek — back to the start" title="Back to the start">H</a>
 
   <!-- ============ VIEW: LANDING ============ -->
   <section id="view-landing">
@@ -746,12 +769,15 @@
 
       <div class="field">
         <label for="wishes">Your wishes</label>
-        <p class="hint-text" style="margin-bottom:0">Be as exact as you like — brands, models, sizes, one per line. The AI turns each into a gentle hint that points the way without naming the item.</p>
+        <p class="hint-text" style="margin-bottom:0">One wish per line — or group them, like <em>needs: slippers, a comb, hair wax</em>. Brands and exact products become gentle hints; general wishes stay as you write them.</p>
         <div class="inspire">
           <span class="inspire-label">Stuck? Start a line with</span>
           <span class="inspire-tags" id="inspire-tags"></span>
         </div>
-        <textarea id="wishes" placeholder="e.g. Nike Pegasus 41 running shoes size 42, Le Creuset Dutch oven in Marseille blue, Kindle Paperwhite…"></textarea>
+        <div class="wish-pad">
+          <div class="wish-mirror" id="wishes-mirror" aria-hidden="true"></div>
+          <textarea id="wishes" placeholder="e.g.&#10;needs: warm slippers, a comb, hair wax&#10;wants: Nike Pegasus 41 size 42, a good history book&#10;enjoys: sour candy"></textarea>
+        </div>
       </div>
 
       <div class="field">
@@ -906,6 +932,7 @@
         var w = $("wishes");
         var prefix = w.value.length && !w.value.endsWith("\n") ? "\n" : "";
         w.value += prefix + tag + ": ";
+        syncWishes();
         w.focus();
         saveDraftSoon();
       });
@@ -943,6 +970,7 @@
       try{ history[opts.replace ? "replaceState" : "pushState"]({ view: viewId }, ""); }catch(e){}
     }
     window.scrollTo({top:0, behavior:"smooth"});
+    if(viewId === "view-give" && wishes) syncWishes(); // the box can only be measured while visible
     trackView(viewId);
   }
   window.addEventListener("popstate", function(e){
@@ -985,6 +1013,8 @@
     b.addEventListener("click", function(){ show("view-landing"); });
   });
   $("preview-back").addEventListener("click", function(){ show("view-give"); });
+  // the wax seal is the home button: switch views in place (keeps the form and draft), no page reload
+  $("home-seal").addEventListener("click", function(e){ e.preventDefault(); show("view-landing"); });
 
   var OCCASIONS = ["christmas","birthday","valentine","other"]; // same list as lib/validate.js
 
@@ -1138,6 +1168,18 @@
 
   /* ---------- wishes ---------- */
   var wishes = $("wishes");
+  var TAG_RE = new RegExp("^(\\s*)(" + inspireTags.join("|") + ")(\\s*:)", "gim");
+  function escHtml(t){ return t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+  /* redraw the coloured mirror + grow the box to its content; call after every change of wishes.value */
+  function syncWishes(){
+    $("wishes-mirror").innerHTML = escHtml(wishes.value).replace(TAG_RE, '$1<span class="wish-tag">$2</span>$3') + "\n";
+    if(!wishes.offsetParent) return; // hidden view: measure when it's shown (see show())
+    wishes.style.height = "auto";
+    wishes.style.height = (wishes.scrollHeight + 2) + "px";
+  }
+  wishes.addEventListener("input", syncWishes);
+  window.addEventListener("resize", syncWishes);
+  syncWishes(); // a restored draft is already in the box
   renderInspireTags();
 
   /* ---------- validation ---------- */
@@ -1253,47 +1295,49 @@
 
   /* ---------- preview rendering & editing ---------- */
   var generatedCount = 0;
+  /* hints = { hints: [...], groups?: [{ label, hints: [...] }] } — one group per wish line
+     ("Needs", "Would love", …). Old / demo data without groups shows as one plain list. */
   function renderPreview(hints){
-    generatedCount = (hints.hints || []).length;
+    var groups = (hints.groups && hints.groups.length) ? hints.groups : [{ label: "", hints: hints.hints || [] }];
+    generatedCount = groups.reduce(function(n, g){ return n + (g.hints || []).length; }, 0);
     var wrap = $("preview-sections");
     wrap.innerHTML = "";
     setError("preview-error", null);
 
-    var secs = [
-      { key:"hints", title:"Your hints", bullet:"✦", bulletClass:"star",
-        sub:"These are AI-generated hints — the exact wishes stay private." }
-    ];
+    var h = document.createElement("h3");
+    h.className = "section-title";
+    h.textContent = "Your hints";
+    wrap.appendChild(h);
+    var sub = document.createElement("p");
+    sub.className = "hint-text";
+    sub.style.marginTop = "0";
+    sub.textContent = "Wishes with a brand or exact product became gentle hints; general ones stay as you wrote them. Edit anything you like.";
+    wrap.appendChild(sub);
 
-    secs.forEach(function(sec){
-      var items = hints[sec.key] || [];
-      if(!items.length) return; // skip empty sections
-
+    groups.forEach(function(g){
+      if(!(g.hints || []).length) return;
       var block = document.createElement("div");
-      var h = document.createElement("h3");
-      h.className = "section-title";
-      h.textContent = sec.title;
-      block.appendChild(h);
-
-      var sub = document.createElement("p");
-      sub.className = "hint-text";
-      sub.style.marginTop = "0";
-      sub.textContent = sec.sub;
-      block.appendChild(sub);
-
+      block.className = "hint-group";
+      if(g.label){
+        var lab = document.createElement("div");
+        lab.className = "hint-group-label";
+        lab.textContent = g.label;
+        block.appendChild(lab);
+      }
       var list = document.createElement("div");
-      list.setAttribute("data-list", sec.key);
-      items.forEach(function(txt){
-        var row = hintRow(txt, sec.bullet, sec.bulletClass);
-        if(sec.key === "hints") row.querySelector("input").setAttribute("data-orig", txt);
+      list.setAttribute("data-list", "hints");
+      list.setAttribute("data-label", g.label || "");
+      g.hints.forEach(function(txt){
+        var row = hintRow(txt, "✦", "star");
+        row.querySelector("input").setAttribute("data-orig", txt);
         list.appendChild(row);
       });
       block.appendChild(list);
-
       var add = document.createElement("button");
       add.type = "button"; add.className = "add-hint";
       add.textContent = "+ add a hint";
       add.addEventListener("click", function(){
-        var row = hintRow("", sec.bullet, sec.bulletClass);
+        var row = hintRow("", "✦", "star");
         list.appendChild(row);
         row.querySelector("input").focus();
       });
@@ -1320,12 +1364,13 @@
   }
 
   function collectHints(){
-    return {
-      hints: Array.prototype.map.call(
-        document.querySelectorAll('[data-list="hints"] input'),
-        function(i){ return i.value.trim(); }
-      ).filter(Boolean)
-    };
+    var groups = Array.prototype.map.call(document.querySelectorAll('[data-list="hints"]'), function(list){
+      return {
+        label: list.getAttribute("data-label") || "",
+        hints: Array.prototype.map.call(list.querySelectorAll("input"), function(i){ return i.value.trim(); }).filter(Boolean)
+      };
+    }).filter(function(g){ return g.hints.length; });
+    return { hints: groups.reduce(function(all, g){ return all.concat(g.hints); }, []), groups: groups };
   }
 
   /* anonymous counts of how the sender changed the AI hints (no text is sent) */
@@ -1375,6 +1420,7 @@
 
   function resetGive(){
     $("form-give").reset();
+    syncWishes();
     emails = []; renderChips();
     maskBrands = [];
     clearTimeout(draftTimer);

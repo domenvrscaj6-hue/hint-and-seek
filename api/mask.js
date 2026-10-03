@@ -25,9 +25,9 @@ export default async function handler(req, res) {
         error: "We couldn't turn your wishes into safe hints — try rephrasing them (one wish per line works best)."
       });
     }
-    await track("mask_ok", { occasion: v.occasion, hints: masked.hints.length });
+    await track("mask_ok", { occasion: v.occasion, hints: masked.hints.length, groups: masked.groups.length });
     // brands go back to the browser so give-hint.js can re-check the user's edits against them
-    return res.status(200).json({ ok: true, hints: { hints: masked.hints }, brands: masked.brands });
+    return res.status(200).json({ ok: true, hints: { hints: masked.hints, groups: masked.groups }, brands: masked.brands });
   } catch (err) {
     console.error("[mask]", err);
     return res.status(500).json({ error: "We couldn't prepare the hints right now — please try again." });
