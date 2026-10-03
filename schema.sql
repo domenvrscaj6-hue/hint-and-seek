@@ -37,6 +37,10 @@ alter table hint_requests drop constraint if exists hint_requests_occasion_check
 alter table hint_requests add constraint hint_requests_occasion_check
   check (occasion in ('christmas','birthday','valentine','other'));
 
+-- Upgrade: gift ideas (Oct 2026) — cached answers + a per-list counter (api/ideas.js). Safe to re-run.
+alter table hint_submissions add column if not exists ideas_count int not null default 0;
+alter table hint_submissions add column if not exists ideas_cache jsonb not null default '{}'::jsonb;
+
 -- Upgrade for databases created before requester_email existed (safe to re-run).
 alter table hint_requests add column if not exists requester_email text;
 

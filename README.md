@@ -6,8 +6,8 @@ receive it — by email and as a picture they can save on their phone.
 
 > **Oct 2026 change:** wishes are no longer rewritten by AI ("masked" into hints). Real lists turned
 > out to be mostly general already, and people who name a product usually want exactly that product.
-> The list is now tidied in the browser and sent as written. AI comes back only as an on-demand
-> "gift ideas" helper for the people buying the gift.
+> The list is now tidied in the browser and sent as written. AI is used only for on-demand
+> **gift ideas** for the people buying the gift (step 5).
 
 ## How it works (give flow)
 
@@ -32,6 +32,12 @@ receive it — by email and as a picture they can save on their phone.
    *Why a button:* security scanners in mail clients (Outlook, corporate filters) open every link
    by themselves, so merely opening a link never sends anything. The same applies to the
    unsubscribe link.
+
+5. **Gift ideas (for givers):** the list email links to the save page (`api/hints.js`), which has a
+   "Not sure what to pick?" section: pick a budget (10–200 €), optionally say what to keep in mind
+   ("for two players"), tap a wish → `POST /api/ideas` → 3 concrete ideas with a typical price, a short
+   reason and a "Search ↗" link. Gemini is called only on that tap; repeated questions come from a cache.
+   Guards: signed link, the wish must be on the list, 10 requests/hour per IP, 30 AI answers per list.
 
 **Fail-safe rule for the whole flow:** if any step fails (validation, storage, blocklist, email),
 nothing is sent to the recipients.
@@ -61,7 +67,9 @@ api/hints.js         → "save these hints" page from the hint email: card as a 
 api/unsubscribe.js   → signed opt-out link → blocklist
 api/feedback.js      → feedback widget → email to the site owner
 api/track.js         → anonymous page views (analytics)
-lib/gemini.js        → small Gemini helper (JSON + model fallback), kept for the upcoming "gift ideas"
+api/ideas.js         → gift ideas for one wish (guards, cache, per-list cap)
+lib/ideas.js         → the gift-ideas prompt + output cleanup
+lib/gemini.js        → small Gemini helper (JSON, minimal thinking, model fallback)
 lib/emails.js        → 4 themed templates (Christmas / birthday / Valentine's Day / other) + invite + confirmation email + Resend
 lib/store.js         → Supabase (REQUIRED in this version: without it nothing is sent)
 lib/security.js      → HMAC signatures for unsubscribe, token generation
@@ -77,7 +85,7 @@ HANDOVER.md          → handover document for further development (for you and 
 | Service | What for | Where |
 |---|---|---|
 | Vercel | hosting the site + backend functions | vercel.com |
-| Google Gemini API key | optional for now — only the upcoming "gift ideas" will use it | aistudio.google.com |
+| Google Gemini API key | gift ideas for givers (billing enabled) | aistudio.google.com |
 | Resend | sending emails | resend.com |
 | Supabase | **required**: pending submissions, requests, blocklist | supabase.com |
 | Domain | so emails don't land in spam | any registrar |
@@ -87,7 +95,7 @@ HANDOVER.md          → handover document for further development (for you and 
 1. **GitHub:** create a new repository and upload all the project files.
 2. **Vercel:** Add New → Project → pick the repository → Deploy.
 3. **Environment variables** (Vercel → Settings → Environment Variables):
-   - `GEMINI_API_KEY`: optional for now — your Gemini key (billing enabled), for the upcoming "gift ideas"
+   - `GEMINI_API_KEY`: your Gemini key with billing enabled — used only for gift ideas
    - `GEMINI_MODEL`: optional; the first model to try (default `gemini-3.6-flash`).
      If it returns 429, 404 or 503, `gemini-3.5-flash`, `gemini-3-flash-preview` and
      `gemini-2.5-flash` are tried automatically.
@@ -118,6 +126,8 @@ HANDOVER.md          → handover document for further development (for you and 
    - [ ] unsubscribe link → page with a button → after the click, sending to that email again is refused
    - [ ] list email → "Save this list to your phone" → the card shows the wisher's name; save / send / copy work on a phone
    - [ ] the tags (needs:, wants: …) are coloured in the wishes box; the wax seal takes you back to the start
+   - [ ] save page → "Not sure what to pick?" → pick a budget, tap a wish → 3 ideas with prices and "Search ↗";
+         asking the same again answers instantly (cache)
    - [ ] get flow: the invite arrives and its button opens the page with the right occasion
    - [ ] feedback widget: the message arrives at `FEEDBACK_TO`
    - [ ] "Send the list" 6 times in a row within an hour → a friendly "take a little break" message
@@ -154,4 +164,6 @@ Events are deleted automatically after 13 months.
 ## Costs
 
 Under 3,000 emails/month: €0 (Resend free 100/day, Vercel Hobby, Supabase free,
-no AI calls for sending lists). The only real cost is the domain (~€10–15/year).
+no AI calls for sending lists). Gift ideas cost ~0.2 cent per AI answer (Gemini 3.6 Flash, minimal
+thinking; cached answers are free) — roughly €0.60 a month for 100 givers. The only other real cost
+is the domain (~€10–15/year).
