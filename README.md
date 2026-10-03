@@ -67,6 +67,7 @@ api/hints.js         → "save these hints" page from the hint email: card as a 
 api/unsubscribe.js   → signed opt-out link → blocklist
 api/feedback.js      → feedback widget → email to the site owner
 api/track.js         → anonymous page views (analytics)
+api/contact.js       → vCard for "Add Hint & Seek to your contacts" (linked from every email)
 api/ideas.js         → gift ideas for one wish (guards, cache, per-list cap)
 lib/ideas.js         → the gift-ideas prompt + output cleanup
 lib/gemini.js        → small Gemini helper (JSON, minimal thinking, model fallback)
@@ -124,6 +125,7 @@ HANDOVER.md          → handover document for further development (for you and 
    - [ ] empty wishes → the form doesn't let you continue
    - [ ] half-filled form → close the tab → open the site again → "Continue your draft" brings everything back
    - [ ] unsubscribe link → page with a button → after the click, sending to that email again is refused
+   - [ ] "Add Hint & Seek to your contacts" in an email downloads a contact card with the EMAIL_FROM address
    - [ ] list email → "Save this list" → the card shows the wisher's name; save / send / copy work on a phone
    - [ ] the tags (needs:, wants: …) are coloured in the wishes box; the wax seal takes you back to the start
    - [ ] save page → "Not sure what to pick?" → pick a budget, tap a wish → 3 ideas with prices and "Search ↗";
