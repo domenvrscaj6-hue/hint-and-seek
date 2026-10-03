@@ -112,7 +112,7 @@ HANDOVER.md          → handover document for further development (for you and 
    - [ ] unsubscribe link → page with a button → after the click, sending to that email again is refused
    - [ ] get flow: the invite arrives and its button opens the page with the right occasion
    - [ ] feedback widget: the message arrives at `FEEDBACK_TO`
-   - [ ] "Preview" 11 times in a row within an hour → a friendly "take a little break" message
+   - [ ] "Preview" 6 times in a row within an hour → a friendly "take a little break" message
    - [ ] Supabase → Database → Cron Jobs: you can see the `hint-seek-cleanup` job
    - [ ] Supabase → Table Editor → `analytics_daily`: after visiting the site you see a `page_view`
    - [ ] page footer → "Privacy policy" opens the privacy page
