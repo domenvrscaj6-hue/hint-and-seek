@@ -81,6 +81,11 @@ see only hints, so choosing the gift stays theirs and the surprise survives.
   rewritten once (`rewriteLiteral()`). Findings: item-specific examples in the prompt get copied
   word for word (don't add them); "analyse, then write without seeing the wish" made hints vague and
   advert-like; telling the model to name the area explicitly made the lite model too literal.
+  Per wish the model also returns `lang` (each hint is written in its own wish's language) and `kind`:
+  "general" wishes ("an interesting book about history", "warm socks") are kept as written — same
+  meaning and detail, only spelling/grammar fixed and put in the hint voice; "specific" ones (any brand,
+  model, title, name) are masked. A branded wish the model calls "general" (e.g. "Nike long socks" →
+  "long socks") is re-asked as specific (`redoMisread()`, guarded by `isGeneral()`).
   Run the eval after every prompt change and read the hints yourself.
 - The Gemini key must have **billing enabled**: free tier = ~20 requests per model per day (the
   site becomes slow / fails once used up), and free-tier data may be used by Google, while
@@ -210,7 +215,7 @@ are currently NOT a priority.)
   plus "Save as picture" (iOS: share sheet → Save Image; elsewhere a download), "Send to someone"
   (Web Share with the image + text) and "Copy text". The wisher's name is always on the card. Works while
   the submission exists (sent rows are deleted after 90 days).
-- Hints are written in the language of the wishes (Slovenian in → Slovenian out); the email frame stays English.
+- Each hint is written in the language of its own wish (Slovenian in → Slovenian out); the email frame stays English.
 - Adding an occasion touches: `OCCASIONS` in `lib/validate.js` and `index.html`, both `<select>`s,
   `THEMES` + `occasionText` in `lib/emails.js`, and the two occasion CHECK constraints in `schema.sql`
   (re-run `schema.sql` in Supabase BEFORE deploying, or inserts with the new value fail). README.md is in English.

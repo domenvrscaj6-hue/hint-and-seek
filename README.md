@@ -117,6 +117,7 @@ HANDOVER.md          → handover document for further development (for you and 
    - [ ] unsubscribe link → page with a button → after the click, sending to that email again is refused
    - [ ] hint email → "Save these hints to your phone" → the card shows the wisher's name; save / send / copy work on a phone
    - [ ] Slovenian wishes give Slovenian hints
+   - [ ] a general wish ("an interesting book about history") comes back as written (typos fixed), a branded one is hidden
    - [ ] get flow: the invite arrives and its button opens the page with the right occasion
    - [ ] feedback widget: the message arrives at `FEEDBACK_TO`
    - [ ] "Preview" 6 times in a row within an hour → a friendly "take a little break" message
