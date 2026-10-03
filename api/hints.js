@@ -1,10 +1,10 @@
 // api/hints.js  (Vercel serverless function)
-// "Save these hints" page, linked from every hint email (signed link, see hintsUrl() in
-// lib/security.js). Shows the hints as a card that is ALSO a PNG picture (drawn on a canvas
+// "Save this list" page, linked from every wish-list email (signed link, see hintsUrl() in
+// lib/security.js). Shows the list as a card that is ALSO a PNG picture (drawn on a canvas
 // in the browser — no server-side image library), so people can keep it in their photos,
 // send it to someone, or copy the text. The wisher's name is always on the card, because
 // one person may collect cards from several people.
-// Only already-masked hints are shown (the same content as the email). The page works as long
+// It shows the same content as the email. The page works as long
 // as the submission is kept: sent submissions are deleted after 90 days (cleanup in schema.sql).
 
 import { selectRows } from "../lib/store.js";
@@ -12,10 +12,10 @@ import { verifyHintsSig } from "../lib/security.js";
 import { track } from "../lib/analytics.js";
 
 const OCCASION_LABEL = {
-  christmas: "Christmas gift hints",
-  birthday: "Birthday gift hints",
-  valentine: "Valentine's gift hints",
-  other: "Gift hints"
+  christmas: "Christmas wish list",
+  birthday: "Birthday wish list",
+  valentine: "Valentine's wish list",
+  other: "Wish list"
 };
 
 function esc(s) {
@@ -69,7 +69,7 @@ export default async function handler(req, res) {
   const id = String(req.query?.id || "");
   const sig = String(req.query?.sig || "");
   if (!/^[0-9a-f-]{36}$/i.test(id) || !verifyHintsSig(id, sig)) {
-    return res.status(400).send(errorPage("That link doesn't look right", "Please open it straight from the email with the hints."));
+    return res.status(400).send(errorPage("That link doesn't look right", "Please open it straight from the email with the list."));
   }
 
   try {
@@ -79,8 +79,8 @@ export default async function handler(req, res) {
     });
     const sub = rows[0];
     if (!sub || sub.status !== "sent") {
-      return res.status(404).send(errorPage("These hints are gone",
-        "We only keep hints for 90 days. The hints are still in the email you received."));
+      return res.status(404).send(errorPage("This list is gone",
+        "We only keep lists for 90 days. It is still in the email you received."));
     }
 
     const data = {
@@ -98,7 +98,7 @@ export default async function handler(req, res) {
 
     // JSON inside <script>: escape "<" so no text can close the tag
     const json = JSON.stringify(data).replace(/</g, "\\u003c");
-    const title = `Gift hints from ${esc(data.name)}`;
+    const title = `${esc(data.label)} from ${esc(data.name)}`;
     const body = `
   <img class="card loading" id="card" alt="${title}">
   <p class="tip">Press and hold the picture to save it, or use the buttons.</p>
@@ -108,7 +108,7 @@ export default async function handler(req, res) {
     <button class="secondary" id="copy" type="button"><svg viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg>Copy text</button>
   </div>
   <p class="msg" id="msg" aria-live="polite"></p>
-  <p class="home"><a href="/">Make your own hints on Hint &amp; Seek</a></p>
+  <p class="home"><a href="/">Make your own wish list on Hint &amp; Seek</a></p>
   <script type="application/json" id="data">${json}</script>
   <script>${CLIENT_JS}</script>`;
     return res.status(200).send(shell(title, body));
@@ -123,7 +123,7 @@ const CLIENT_JS = String.raw`
 (function(){
   var d = JSON.parse(document.getElementById("data").textContent);
   var img = document.getElementById("card"), msg = document.getElementById("msg");
-  var fileName = "gift-hints-" + d.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") + ".png";
+  var fileName = "wish-list-" + d.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") + ".png";
   var blob = null;
 
   var text = d.label + " from " + d.name + " (" + d.date + ")\n" +
@@ -274,7 +274,7 @@ const CLIENT_JS = String.raw`
     if(canShareFile(f)){
       navigator.share({ files: [f], text: text }).catch(function(){});
     } else if(navigator.share){
-      navigator.share({ title: "Gift hints from " + d.name, text: text }).catch(function(){});
+      navigator.share({ title: d.label + " from " + d.name, text: text }).catch(function(){});
     } else {
       copy(); say("Copied — paste it into a message to send it.");
     }

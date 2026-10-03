@@ -9,35 +9,36 @@
 
 Hint & Seek is a small web app that solves gift-giving two ways:
 
-- **Give a hint (push):** a person writes their wishes (specific is good — brands, models,
-  sizes) and chooses recipients and an occasion (Christmas / Birthday / Valentine's Day / Other). An LLM
-  (Google Gemini) masks the wishes into gentle hints — nudges toward an activity or need that never name
-  the item itself (not just the brand removed); recipients never see the
-  raw text. The person reviews and edits the hints, confirms via an email link, and only
-  then do recipients get a themed email.
-  - The optional **"Anything specific?"** note (stored as `special_notes`) is the ONLY
-    part sent word-for-word, at the end of the email — e.g. "Please, no scented candles
-    this year" or a wish that doesn't need to be a surprise.
-  - Masking is the whole product. There used to be an "Exact Wishes" tab that bypassed
-    the AI; it was removed in September 2026 on purpose. Don't bring it back.
+- **Give a hint (push):** a person writes what they need, want and like — one wish per line or grouped
+  by a tag (`needs: slippers, a comb, hair wax`) — chooses recipients and an occasion (Christmas /
+  Birthday / Valentine's Day / Other), checks the tidied list in an instant preview, confirms via an
+  email link, and only then do recipients get a themed email with the list (plus a "save to your
+  phone" picture page). An optional personal note (`special_notes`) goes at the end.
 - **Get a hint (pull):** a gift-giver enters their own name + email and the email of the
   person they're shopping for; that person receives a friendly invite to fill in the
   Give flow. The invite link (`?flow=give&occasion=…&to=<requester>&from=<name>`)
-  pre-fills the requester as a recipient, so the hints reach them automatically.
-  Nobody imposes a wishlist — hints arrive only on request.
+  pre-fills the requester as a recipient, so the list reaches them automatically.
 
-The unique product bet: existing wishlist apps show givers the exact items; here givers
-see only hints, so choosing the gift stays theirs and the surprise survives.
+**Product decision (Oct 2026) — no more AI masking.** Until Oct 2026 every wish went through Gemini
+and was rewritten into a vague "hint" so givers never saw the exact item. Testing with a real list
+showed that people mostly write general wishes anyway (nothing to hide), and those who name a product
+("Nike Pegasus, size 42") want exactly that — hiding it is a disservice. So: the list is tidied in the
+browser (`parseWishList()` in `index.html`) and sent as written; the value is *easy writing* (tags),
+*one-click sharing* and the phone card. AI returns as an on-demand **gift-ideas helper for givers**
+(next step): on the save page a giver taps "Gift ideas" for a wish, sets a budget and an optional
+note, and gets 3 concrete ideas — the AI is only called when someone asks. Don't bring masking back
+without new evidence (`mask_ok` analytics with `specific`/`general` counts exist for older data).
 
-## 2. Current state (September 2026) — DONE
+## 2. Current state (October 2026) — DONE
 
 - Vintage "old paper on a wooden desk" single-page frontend (`index.html`):
   - landing choice cards (Give / Get) + on-sheet "how it works" (3 numbered stamps)
-    and a before → after example of a masked wish
+    and an example: a tagged line you write → the grouped list they get
   - give form in two groups ("From you, to them" / "What you wish for"): name + sender
     email side by side, recipient chips, occasion, one wishes box with "+" inspiration
-    tags, optional "Anything specific?" note
-  - preview step with inline editing (add / edit / delete) of the hints
+    tags, optional personal note
+  - instant preview (`parseWishList()`: tags → groups, commas → separate wishes, brackets kept,
+    "size 42"/colour parts stay with their wish) with inline editing (add / edit / delete)
   - get form (requester name + email, target email, occasion)
   - success view
   - the wax seal on the sheet corner is the home button (`#home-seal`, switches to the landing view in place)
@@ -52,10 +53,6 @@ see only hints, so choosing the gift stays theirs and the surprise survives.
     notice + "Start fresh"; the landing card then says "Continue your draft". Deleted after the
     hints are submitted, on "Start fresh", or after 60 days. Mentioned in `privacy.html`.
     A link's `occasion` / invite recipient wins over / is added to the draft.
-  - while `/api/mask` runs, a progress bar eases to 92 % with changing status text
-    (`startProgress()` in `index.html`) and jumps to 100 % when the hints arrive
-  - Gemini is asked for the lowest thinking level (`thinkingConfigFor()` in `lib/gemini.js`) —
-    "thinking" is most of the wait; a model that rejects the setting is retried without it
   - browser back/forward moves between views (`history.pushState` in `show()`), so the phone's
     back button no longer leaves the site mid-form
   - confirm (`api/confirm.js`): if anything fails after the submission was claimed but before
@@ -68,42 +65,26 @@ see only hints, so choosing the gift stays theirs and the surprise survives.
   - meta description, `theme-color`, OG/Twitter tags; share image `og-image.png` (1200×630)
   - works as a static preview without backend ("preview mode")
 - Backend (Vercel serverless, zero npm dependencies, plain `fetch` everywhere):
-  - `api/mask.js` — wishes → Gemini → hints (+ brand list)
-  - `api/give-hint.js` — strict validation, leak re-check, blocklist, stores to `pending`,
+  - `api/give-hint.js` — strict validation, blocklist, stores to `pending`,
     confirmation email to sender
   - `api/confirm.js` — GET shows a button, POST sends the hint emails, marks `sent`
   - `api/get-hint.js` — pull invite (stores requester name + email)
   - `api/unsubscribe.js` — HMAC-signed opt-out (GET shows a button, POST) → blocklist
   - `api/feedback.js` — feedback widget → email to the site owner
-- Gemini with **automatic model fallback** (`lib/gemini.js`): on 404 / 429 / 503 or unparseable output the next
-  model in `FALLBACK_MODELS` is tried (`GEMINI_MODEL` or `gemini-3.6-flash` →
-  `gemini-3.5-flash` → `gemini-3-flash-preview` → `gemini-2.5-flash`).
-- `mask_ok` analytics carry `specific` / `general` counts (how many wishes were really masked vs kept).
-- Wish → hint prompt (Oct 2026, chosen on a 30-wish test set, `scripts/eval-hints.mjs`): one numbered
-  wish per line in, one item per wish out (`avoid` words, `area`, `hint`) — no merging. The hint is
-  written from the area, never the item. A hint that still contains one of its `avoid` words is
-  rewritten once (`rewriteLiteral()`). Findings: item-specific examples in the prompt get copied
-  word for word (don't add them); "analyse, then write without seeing the wish" made hints vague and
-  advert-like; telling the model to name the area explicitly made the lite model too literal.
-  Per wish the model also returns `lang` (each hint is written in its own wish's language) and `kind`:
-  "general" wishes ("an interesting book about history", "warm socks") are kept as written — same
-  meaning and detail, only spelling/grammar fixed and put in the hint voice; "specific" ones (any brand,
-  model, title, name) are masked. A branded wish the model calls "general" (e.g. "Nike long socks" →
-  "long socks") is re-asked as specific (`redoMisread()`, guarded by `isGeneral()`).
-  Since Oct 2026 the output is GROUPED: one group per tag, labelled with the English tag name in every
-  language ("Needs", "Wants", "Likes", … — `groupLabel()`; translate them when the site gets more
-  languages), lines with the same tag merged, untagged → "", and every comma-separated
-  wish is its own item (people write "needs: slippers, a comb, hair wax"). Stored as
-  `masked_hints = { hints: [flat], groups: [{label, hints}], exact: [] }` (max 30 hints / 12 groups,
-  `MAX_HINTS` in lib/gemini.js + lib/validate.js); preview, emails and the save page render the groups,
-  and fall back to the flat list for older submissions.
-  Run the eval after every prompt change and read the hints yourself.
-- The Gemini key must have **billing enabled**: free tier = ~20 requests per model per day (the
-  site becomes slow / fails once used up), and free-tier data may be used by Google, while
-  `privacy.html` promises the paid API.
-- Emails (`lib/emails.js`): three occasion themes, inline-styled HTML; hint emails list the
-  "✦" hints and the sender's note; confirmation email warns the sender that recipients
-  should check their spam folder. Hint and invite emails carry RFC 8058 one-click
+- `lib/gemini.js` — small helper (`askGemini(system, user)`): JSON output, `thinkingLevel: "minimal"`,
+  automatic model fallback (`GEMINI_MODEL` or `gemini-3.6-flash` → `gemini-3.5-flash` →
+  `gemini-3-flash-preview` → `gemini-2.5-flash`). Not used by the give flow any more; kept for the
+  gift-ideas feature. Measured Oct 2026: a gift-ideas request ≈ 170 in / 220 out tokens ≈ 0.2 cent, ~2 s.
+  The key needs **billing enabled** (free tier ≈ 20 requests per model per day).
+- Wish list shape (stored in the historically named `masked_hints` column):
+  `{ hints: [flat], groups: [{ label, hints }], exact: [] }` — labels are the English tag names
+  ("Needs", "Wants", "Likes", "Craves", "Dreams of", "Is into", "Enjoys", "Hobbies"; translate them when
+  the site gets more languages), max 30 wishes / 12 groups (`MAX_HINTS` in lib/validate.js and
+  `parseWishList()`); preview, emails and the save page render the groups and fall back to the flat
+  list for older rows.
+- Emails (`lib/emails.js`): four occasion themes, inline-styled HTML; list emails show the grouped
+  "✦" wishes, the sender's note and a "Save this list to your phone" button; confirmation email warns
+  the sender that recipients should check their spam folder. List and invite emails carry RFC 8058 one-click
   List-Unsubscribe headers. (The "✓ Exact Wishes" block only renders for old stored rows.)
 - Fail-safe philosophy: if ANY step fails, nothing is sent.
 - Storage: Supabase (pending submissions, pull requests, blocklist), `schema.sql` provided.
@@ -112,11 +93,11 @@ see only hints, so choosing the gift stays theirs and the surprise survives.
 
 ```text
 Browser (index.html, vanilla JS)
-   │  POST /api/mask ────────────► Gemini (wishes → hints + brand list)
-   │  POST /api/give-hint ───────► validate → scrub hints → blocklist → Supabase (pending)
+   │  (preview: parseWishList() in the browser — no request)
+   │  POST /api/give-hint ───────► validate → blocklist → Supabase (pending)
    │                                └─► Resend: confirmation email to SENDER only
-   │  GET  /api/confirm?token ───► page with a "Send the hints" button (sends nothing)
-   │  POST /api/confirm?token ───► atomic claim pending→sent → Resend: hint emails
+   │  GET  /api/confirm?token ───► page with a "Send the list" button (sends nothing)
+   │  POST /api/confirm?token ───► atomic claim pending→sent → Resend: wish-list emails
    │                                to each recipient (with unsubscribe link + List-Unsubscribe header)
    │  POST /api/get-hint ────────► blocklist → Supabase (hint_requests) → Resend: invite
    │  GET  /api/unsubscribe ─────► verify HMAC → page with an "Unsubscribe" button
@@ -133,12 +114,12 @@ Browser (index.html, vanilla JS)
 Data shapes used across the give flow:
 
 ```text
-sections (raw, private)   = { hints: "free text, one wish per line" }
-hints    (what is sent)   = { hints: ["masked hint", ...], exact: [] }   // exact kept empty for the stored shape
-special_notes             = "optional note, sent word-for-word"
+sections (raw)            = { hints: "the wishes text as typed" }          // erased after sending
+hints    (what is sent)   = { hints: [...], groups: [{ label, hints }], exact: [] }  // the list as approved
+special_notes             = "optional personal note"
 ```
 
-Limits: max 20 recipients, 3000 chars of wishes, max 8 hints, 160 chars per hint, 600 chars note. Previews (Gemini calls): 5 per IP per hour (`LIMITS.mask`).
+Limits: max 20 recipients, 3000 chars of wishes, max 30 wishes / 12 groups, 160 chars per wish, 600 chars note.
 
 ## 4. Environment variables (Vercel → Settings)
 
@@ -165,14 +146,9 @@ Limits: max 20 recipients, 3000 chars of wishes, max 8 hints, 160 chars per hint
 - Design tokens live in `:root` of `index.html` (paper `#f3ead7`, ink `#3a2c1c`,
   seal red `#a4443a`, desk `#2e2318`; fonts: Caveat for handwriting, EB Garamond for body).
   Background: wood grain only (no desk decorations — removed at the user's request).
-- Privacy: never log raw wishes; Gemini receives only the wishes text — no recipient
-  emails, names, or the note; recipient emails are used for delivery + blocklist only.
-- Masking safety: `checkHints()` in `lib/gemini.js` runs on Gemini output, and again on
-  user-edited hints in `give-hint.js` (which refuses to send if a hint leaks). It combines
-  a heuristic (`brandLikeTokens`: letter+digit mixes, inner capitals, ALL CAPS, capitalised
-  words mid-sentence) with the `brands` list Gemini extracts from the raw text (the browser
-  sends it back to give-hint). Whole-word matching only. Never remove this double check.
-  The "Anything specific?" note is intentionally NOT checked — it is the user's own words.
+- Privacy: never log wishes; no AI service receives them in the give flow; recipient emails are
+  used for delivery + blocklist only. (When gift ideas arrive: send Gemini only the wish list text and
+  the giver's budget/note — never names or emails — and update `privacy.html`.)
 - Links in emails must never act on a plain GET (mail scanners open them). GET shows a
   page with a button; the action happens on POST. Keep it that way for any new link.
 
@@ -196,7 +172,7 @@ Limits: max 20 recipients, 3000 chars of wishes, max 8 hints, 160 chars per hint
    These periods are promised in `privacy.html` — change both together.
 
 ~~**Phase 2: "Keep wish as is"**~~ — dropped. An "Exact Wishes" tab existed (Aug 2026) and
-was removed (Sep 2026): masking is the product. Specific wishes go in the optional note.
+was removed (Sep 2026). In Oct 2026 masking itself was dropped too — see the product decision in §1.
 
 **Phase 3: Polishing & analytics** — DONE (Sep 2026)
 3. Analytics — `lib/analytics.js` + `api/track.js` → `analytics_events`, with summary views
@@ -215,7 +191,7 @@ are currently NOT a priority.)
 - Read this file and README.md before proposing changes.
 - Work ONE phase/TODO at a time. Ask the user which one to tackle first.
 - Never weaken the fail-safe pipeline. Required: name, sender email, ≥1 recipient,
-  occasion, and at least one wish. The "Anything specific?" note stays optional.
+  occasion, and at least one wish. The personal note stays optional.
 - Never introduce a step where recipients receive anything before the sender's
   email confirmation.
 - Keep the zero-dependency + single-file-frontend constraints unless the user
@@ -314,8 +290,8 @@ Several sessions have already built the same feature twice on separate branches
 **Open (PR #5, not merged yet):** only docs — this log and the "parallel sessions" rules in §8.
 
 **Decisions (and why):**
-- **Masking only, no "Exact Wishes".** Masking is the product; anything verbatim goes in the
-  optional "Anything specific?" note (placeholder shows "no scented candles" + an exact-book example).
+- ~~**Masking only, no "Exact Wishes".**~~ Superseded in Oct 2026: no masking at all, the list is
+  sent as written (see §1).
 - **Rate limiting and cleanup: `main`'s version from PR #1 was kept.** This session had built
   its own, and it was dropped to avoid two versions. Note that PR #1's limiter fails open.
 - **Supabase instead of Upstash for rate limiting.** It needs no new account or service.

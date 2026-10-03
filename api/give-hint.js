@@ -1,14 +1,12 @@
 // api/give-hint.js  (Vercel serverless function)
 // Step 2 of the give flow (after the on-page preview).
 // FAIL-SAFE pipeline — if ANY step fails, NOTHING is sent to recipients:
-//   1. strict validation (at least one wish / hint)
-//   2. re-check edited hints (no brand/model may leak back in)
-//   3. blocklist check (Supabase required — no storage, no sending)
-//   4. store the submission as PENDING with a one-time token
-//   5. email a confirmation link to the sender — recipients get nothing yet.
+//   1. strict validation (at least one wish)
+//   2. blocklist check (Supabase required — no storage, no sending)
+//   3. store the submission as PENDING with a one-time token
+//   4. email a confirmation link to the sender — recipients get nothing yet.
 // Recipients receive the hints only in api/confirm.js, after the sender clicks.
 
-import { checkHints } from "../lib/gemini.js";
 import { buildConfirmEmail, sendEmail } from "../lib/emails.js";
 import { insertRow, updateRows, blockedAmong } from "../lib/store.js";
 import { newToken, siteUrlFrom } from "../lib/security.js";
@@ -30,29 +28,18 @@ export default async function handler(req, res) {
   const h = validateHints(b.hints);
   if (h.error) return res.status(400).json({ error: h.error });
 
-  // ---------- step 2: re-check edited hints (fail-safe against leaks) ----------
-  // `brands` comes from /api/mask (Gemini's brand list); the heuristic check runs regardless.
-  const { clean, leaks } = checkHints(v.sections.hints, h.hints.hints, b.brands);
-  if (leaks.length) {
-    const first = leaks[0];
-    return res.status(422).json({
-      error: `This hint still gives away “${first.word}”: “${first.hint}”. Please reword it (or remove it) — nothing was sent.`
-    });
-  }
-  // keep the groups ("Needs", "Would love", …) the sender saw in the preview; nothing leaked, so they're clean
-  const hints = h.hints.groups
-    ? { hints: h.hints.hints, groups: h.hints.groups, exact: [] }
-    : { hints: clean, exact: [] };
+  // the list exactly as the sender approved it in the preview (groups: "Needs", "Wants", …)
+  const hints = h.hints;
 
   try {
-    // ---------- step 3: blocklist ----------
+    // ---------- step 2: blocklist ----------
     const blocked = await blockedAmong(v.recipients);
     const recipients = v.recipients.filter(r => !blocked.has(r));
     if (recipients.length === 0) {
       return res.status(422).json({ error: "Everyone on your list has opted out of Hint & Seek emails, so nothing can be sent." });
     }
 
-    // ---------- step 4: store as pending ----------
+    // ---------- step 3: store as pending ----------
     const token = newToken();
     const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
     await insertRow("hint_submissions", {
@@ -60,15 +47,15 @@ export default async function handler(req, res) {
       sender_email: v.senderEmail,
       occasion: v.occasion,
       recipients,                    // jsonb
-      raw_sections: v.sections,      // jsonb — the private wishes { hints }
-      masked_hints: hints,           // jsonb — what recipients will see { hints: [...], exact: [] }
+      raw_sections: v.sections,      // jsonb — the wishes text as typed { hints } (erased after sending)
+      masked_hints: hints,           // jsonb — what recipients see { hints, groups, exact: [] } (column name is historical)
       special_notes: v.specialNotes || null,
       token,
       status: "pending",
       expires_at: expiresAt
     });
 
-    // ---------- step 5: confirmation email to the sender ----------
+    // ---------- step 4: confirmation email to the sender ----------
     const siteUrl = siteUrlFrom(req);
     const confirmUrl = `${siteUrl}/api/confirm?token=${token}`;
     try {
@@ -87,7 +74,7 @@ export default async function handler(req, res) {
       throw mailErr;
     }
 
-    // Anonymous stats: how much the sender changed the AI hints (counts only).
+    // Anonymous stats: how much the sender changed the tidied list in the preview (counts only).
     await track("give_submitted", {
       occasion: v.occasion,
       recipients: recipients.length,
