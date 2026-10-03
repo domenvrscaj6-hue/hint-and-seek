@@ -9,7 +9,7 @@
 
 import { buildHintEmail, sendEmail, unsubscribeHeaders } from "../lib/emails.js";
 import { selectRows, updateRows, blockedAmong } from "../lib/store.js";
-import { unsubscribeUrl, siteUrlFrom } from "../lib/security.js";
+import { unsubscribeUrl, hintsUrl, siteUrlFrom } from "../lib/security.js";
 import { track } from "../lib/analytics.js";
 
 // `mark` = text in the round stamp; `extra` = optional trusted HTML (e.g. the confirm button)
@@ -120,6 +120,7 @@ export default async function handler(req, res) {
     }
 
     const siteUrl = siteUrlFrom(req);
+    const saveUrl = hintsUrl(siteUrl, sub.id); // same "save these hints" page for every recipient
     const results = await Promise.allSettled(
       recipients.map(to => {
         const unsubUrl = unsubscribeUrl(siteUrl, to);
@@ -128,7 +129,8 @@ export default async function handler(req, res) {
           occasion: sub.occasion,
           hints: sub.masked_hints,
           specialNotes: sub.special_notes,
-          unsubscribeUrl: unsubUrl
+          unsubscribeUrl: unsubUrl,
+          hintsUrl: saveUrl
         });
         return sendEmail({ to, subject, html, headers: unsubscribeHeaders(unsubUrl) });
       })

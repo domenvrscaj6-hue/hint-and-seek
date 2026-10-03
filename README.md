@@ -55,6 +55,7 @@ api/mask.js          → wishes → hints (Gemini), for the preview
 api/give-hint.js     → validation + storing as pending + confirmation email to the sender
 api/confirm.js       → confirmation link → sends the hints to the recipients
 api/get-hint.js      → pull flow: invite to the person you'd like hints from
+api/hints.js         → "save these hints" page from the hint email: card as a picture, send, copy
 api/unsubscribe.js   → signed opt-out link → blocklist
 api/feedback.js      → feedback widget → email to the site owner
 api/track.js         → anonymous page views (analytics)
@@ -114,6 +115,8 @@ HANDOVER.md          → handover document for further development (for you and 
    - [ ] empty wishes → the form doesn't let you continue
    - [ ] half-filled form → close the tab → open the site again → "Continue your draft" brings everything back
    - [ ] unsubscribe link → page with a button → after the click, sending to that email again is refused
+   - [ ] hint email → "Save these hints to your phone" → the card shows the wisher's name; save / send / copy work on a phone
+   - [ ] Slovenian wishes give Slovenian hints
    - [ ] get flow: the invite arrives and its button opens the page with the right occasion
    - [ ] feedback widget: the message arrives at `FEEDBACK_TO`
    - [ ] "Preview" 6 times in a row within an hour → a friendly "take a little break" message

@@ -205,6 +205,12 @@ are currently NOT a priority.)
 - Keep the zero-dependency + single-file-frontend constraints unless the user
   explicitly agrees to change them.
 - When you change behaviour, update README.md and this file in the same commit.
+- Hint emails link to `api/hints.js` (signed with `hintsUrl()` in `lib/security.js`, HMAC over the
+  submission id): a card drawn on a canvas in the browser and shown as a PNG `<img>` (long-press → save),
+  plus "Save as picture" (iOS: share sheet → Save Image; elsewhere a download), "Send to someone"
+  (Web Share with the image + text) and "Copy text". The wisher's name is always on the card. Works while
+  the submission exists (sent rows are deleted after 90 days).
+- Hints are written in the language of the wishes (Slovenian in → Slovenian out); the email frame stays English.
 - Adding an occasion touches: `OCCASIONS` in `lib/validate.js` and `index.html`, both `<select>`s,
   `THEMES` + `occasionText` in `lib/emails.js`, and the two occasion CHECK constraints in `schema.sql`
   (re-run `schema.sql` in Supabase BEFORE deploying, or inserts with the new value fail). README.md is in English.
