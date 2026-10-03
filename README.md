@@ -27,7 +27,7 @@ receive it — by email and as a picture they can save on their phone.
    at this step.
 4. The sender opens the link → `GET /api/confirm?token=...` shows a page with a **Send the list**
    button → only the click (`POST`) sends the list to the recipients (every email has an
-   unsubscribe link and a "Save this list to your phone" button), and the submission becomes `sent`.
+   unsubscribe link and two buttons: "Save this list" and "Get gift ideas"), and the submission becomes `sent`.
    The link works once and expires after 48 h.
    *Why a button:* security scanners in mail clients (Outlook, corporate filters) open every link
    by themselves, so merely opening a link never sends anything. The same applies to the
@@ -124,7 +124,7 @@ HANDOVER.md          → handover document for further development (for you and 
    - [ ] empty wishes → the form doesn't let you continue
    - [ ] half-filled form → close the tab → open the site again → "Continue your draft" brings everything back
    - [ ] unsubscribe link → page with a button → after the click, sending to that email again is refused
-   - [ ] list email → "Save this list to your phone" → the card shows the wisher's name; save / send / copy work on a phone
+   - [ ] list email → "Save this list" → the card shows the wisher's name; save / send / copy work on a phone
    - [ ] the tags (needs:, wants: …) are coloured in the wishes box; the wax seal takes you back to the start
    - [ ] save page → "Not sure what to pick?" → pick a budget, tap a wish → 3 ideas with prices and "Search ↗";
          asking the same again answers instantly (cache)

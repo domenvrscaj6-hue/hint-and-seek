@@ -92,7 +92,7 @@ without new evidence (`mask_ok` analytics with `specific`/`general` counts exist
   `parseWishList()`); preview, emails and the save page render the groups and fall back to the flat
   list for older rows.
 - Emails (`lib/emails.js`): four occasion themes, inline-styled HTML; list emails show the grouped
-  "✦" wishes, the sender's note and a "Save this list to your phone" button; confirmation email warns
+  "✦" wishes, the sender's note and two buttons, "Save this list" and "✦ Get gift ideas" (→ `#ideas`); confirmation email warns
   the sender that recipients should check their spam folder. List and invite emails carry RFC 8058 one-click
   List-Unsubscribe headers. (The "✓ Exact Wishes" block only renders for old stored rows.)
 - Fail-safe philosophy: if ANY step fails, nothing is sent.
