@@ -51,6 +51,32 @@ function shell(title, body) {
   .home{margin-top:26px;font-size:14px}
   .home a{color:#cdbd9c}
   .box{background:#f3ead7;border-radius:4px;padding:36px 28px;box-shadow:0 10px 30px rgba(0,0,0,.45)}
+  /* gift ideas (api/ideas.js) */
+  .ideas{margin-top:26px;background:#f3ead7;border-radius:4px;padding:24px 20px 20px;text-align:left;
+    box-shadow:0 10px 30px rgba(0,0,0,.45)}
+  .ideas h2{font-family:'Caveat',cursive;font-size:32px;line-height:1.1}
+  .ideas .sub{font-size:16px;color:#5c4a33;line-height:1.45;margin-top:4px}
+  .ideas .lab{font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#a4443a;margin:16px 0 6px}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{font-family:'EB Garamond',Georgia,serif;font-size:16px;font-weight:600;padding:4px 12px;border-radius:14px;
+    border:1px solid #b8a582;background:#eadfc4;color:#5c4a33;box-shadow:none}
+  .chip[aria-pressed="true"]{background:#a4443a;border-color:#7e332b;color:#fdf6e6}
+  .ideas input{width:100%;font-family:'EB Garamond',Georgia,serif;font-size:16px;padding:8px 10px;color:#3a2c1c;
+    background:transparent;border:1px solid #b8a582;border-radius:3px}
+  .ideas input:focus{outline:none;border-color:#a4443a;box-shadow:0 0 0 1px #a4443a}
+  .wishes{margin-top:6px}
+  .wish-btn{width:100%;justify-content:space-between;text-align:left;font-family:'EB Garamond',Georgia,serif;font-size:17px;
+    font-weight:400;padding:10px 4px;border-radius:0;background:none;color:#3a2c1c;box-shadow:none;border-bottom:1px solid #d8c9a8}
+  .wish-btn span.go{font-style:italic;font-size:15px;color:#a4443a;white-space:nowrap}
+  .wish-btn:active{transform:none}
+  .out{padding:8px 4px 12px}
+  .out .idea{margin-top:10px}
+  .out .idea b{font-weight:600}
+  .out .price{color:#a4443a;font-weight:600;margin-left:6px;white-space:nowrap}
+  .out .why{font-size:15px;color:#5c4a33;line-height:1.4}
+  .out a{font-size:14px;color:#a4443a}
+  .out .wait,.out .err{font-style:italic;color:#76695a;font-size:15px}
+  .fine{font-size:13px;font-style:italic;color:#76695a;margin-top:14px}
   h1{font-family:'Caveat',cursive;font-size:38px;margin-bottom:10px}
   .box p{font-size:17px;line-height:1.55;color:#5c4a33}
 </style></head><body><div class="wrap">${body}</div></body></html>`;
@@ -94,6 +120,7 @@ export default async function handler(req, res) {
       ).map(g => ({ label: String(g.label || ""), hints: (g.hints || []).map(String) })).filter(g => g.hints.length),
       note: sub.special_notes ? String(sub.special_notes) : ""
     };
+    data.id = id; data.sig = sig; // for the gift-ideas requests from this page
     await track("hints_page_view", { occasion: sub.occasion });
 
     // JSON inside <script>: escape "<" so no text can close the tag
@@ -108,6 +135,17 @@ export default async function handler(req, res) {
     <button class="secondary" id="copy" type="button"><svg viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg>Copy text</button>
   </div>
   <p class="msg" id="msg" aria-live="polite"></p>
+  <section class="ideas" id="ideas" aria-labelledby="ideas-title">
+    <h2 id="ideas-title">Not sure what to pick?</h2>
+    <p class="sub">Tap a wish and get 3 gift ideas that fit your budget.</p>
+    <p class="lab">Your budget</p>
+    <div class="chips" id="budget" role="group" aria-label="Budget"></div>
+    <p class="lab"><label for="ideas-note">Anything to keep in mind? (optional)</label></p>
+    <input id="ideas-note" maxlength="200" placeholder="e.g. for two players, already has Catan">
+    <p class="lab">Wishes</p>
+    <div class="wishes" id="wish-buttons"></div>
+    <p class="fine">Ideas are suggested by AI — prices are approximate, so check in the shop before you buy.</p>
+  </section>
   <p class="home"><a href="/">Make your own wish list on Hint &amp; Seek</a></p>
   <script type="application/json" id="data">${json}</script>
   <script>${CLIENT_JS}</script>`;
@@ -292,5 +330,64 @@ const CLIENT_JS = String.raw`
     } else fallback();
   }
   document.getElementById("copy").addEventListener("click", copy);
+
+  /* ---------- gift ideas: the AI is called only when someone taps a wish ---------- */
+  var BUDGETS = [10, 20, 30, 50, 100, 200], budget = 30;
+  var budgetBox = document.getElementById("budget");
+  BUDGETS.forEach(function(v){
+    var c = document.createElement("button");
+    c.type = "button"; c.className = "chip"; c.textContent = v + " €";
+    c.setAttribute("aria-pressed", v === budget ? "true" : "false");
+    c.addEventListener("click", function(){
+      budget = v;
+      Array.prototype.forEach.call(budgetBox.children, function(x){ x.setAttribute("aria-pressed", x === c ? "true" : "false"); });
+    });
+    budgetBox.appendChild(c);
+  });
+  var wishBox = document.getElementById("wish-buttons");
+  d.groups.forEach(function(g){
+    g.hints.forEach(function(w){
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "wish-btn";
+      var t = document.createElement("span"); t.textContent = w;
+      var go = document.createElement("span"); go.className = "go"; go.textContent = "Ideas →";
+      b.appendChild(t); b.appendChild(go);
+      var out = document.createElement("div"); out.className = "out"; out.hidden = true;
+      b.addEventListener("click", function(){ askIdeas(w, out, go); });
+      wishBox.appendChild(b); wishBox.appendChild(out);
+    });
+  });
+
+  function line(cls, txt){ var p = document.createElement("p"); p.className = cls; p.textContent = txt; return p; }
+
+  function askIdeas(wish, out, go){
+    out.hidden = false; out.innerHTML = ""; out.appendChild(line("wait", "Thinking of ideas…"));
+    go.textContent = "…";
+    fetch("/api/ideas", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: d.id, sig: d.sig, wish: wish, budget: budget, note: document.getElementById("ideas-note").value })
+    }).then(function(r){
+      return r.json().catch(function(){ return {}; }).then(function(j){ if(!r.ok) throw new Error(j.error || "Couldn't get ideas — please try again."); return j; });
+    }).then(function(j){
+      out.innerHTML = "";
+      (j.ideas || []).forEach(function(i){
+        var box = document.createElement("div"); box.className = "idea";
+        var head = document.createElement("p");
+        var name = document.createElement("b"); name.textContent = i.idea; head.appendChild(name);
+        if(i.price){ var pr = document.createElement("span"); pr.className = "price"; pr.textContent = i.price; head.appendChild(pr); }
+        box.appendChild(head);
+        if(i.why) box.appendChild(line("why", i.why));
+        var a = document.createElement("a");
+        a.href = "https://www.google.com/search?q=" + encodeURIComponent(i.idea);
+        a.target = "_blank"; a.rel = "noopener"; a.textContent = "Search ↗";
+        box.appendChild(a);
+        out.appendChild(box);
+      });
+      go.textContent = "Again →";
+    }).catch(function(e){
+      out.innerHTML = ""; out.appendChild(line("err", e.message || "Couldn't get ideas — please try again."));
+      go.textContent = "Ideas →";
+    });
+  }
 })();
 `;

@@ -25,8 +25,8 @@ showed that people mostly write general wishes anyway (nothing to hide), and tho
 ("Nike Pegasus, size 42") want exactly that — hiding it is a disservice. So: the list is tidied in the
 browser (`parseWishList()` in `index.html`) and sent as written; the value is *easy writing* (tags),
 *one-click sharing* and the phone card. AI returns as an on-demand **gift-ideas helper for givers**
-(next step): on the save page a giver taps "Gift ideas" for a wish, sets a budget and an optional
-note, and gets 3 concrete ideas — the AI is only called when someone asks. Don't bring masking back
+(done, Oct 2026): on the save page a giver taps a wish, sets a budget and an optional note, and gets
+3 concrete ideas — the AI is only called when someone asks. Don't bring masking back
 without new evidence (`mask_ok` analytics with `specific`/`general` counts exist for older data).
 
 ## 2. Current state (October 2026) — DONE
@@ -75,6 +75,14 @@ without new evidence (`mask_ok` analytics with `specific`/`general` counts exist
   automatic model fallback (`GEMINI_MODEL` or `gemini-3.6-flash` → `gemini-3.5-flash` →
   `gemini-3-flash-preview` → `gemini-2.5-flash`). Not used by the give flow any more; kept for the
   gift-ideas feature. Measured Oct 2026: a gift-ideas request ≈ 170 in / 220 out tokens ≈ 0.2 cent, ~2 s.
+- Gift ideas: `api/ideas.js` + `lib/ideas.js`, UI in the save page (`api/hints.js`, "Not sure what to pick?").
+  Guards: signed link (same id+sig as the save page), the wish must be on that list, `LIMITS.ideas`
+  (10/h per IP), `MAX_PER_LIST` = 30 AI answers per list (`ideas_count`), answers cached per
+  wish+budget+note in `ideas_cache` (jsonb, max 40). Budgets: 10/20/30/50/100/200 €. Prompt rules learned
+  in testing: keep titles in the original ("Atomic Habits", never a translation), name a specific
+  title/model only when sure it exists (else describe the type), exact wishes → that item first,
+  language = the list's main language; output is cleaned of stray non-Latin characters. If the
+  `ideas_*` columns are missing (schema not re-run) it still answers, just without cache/cap.
   The key needs **billing enabled** (free tier ≈ 20 requests per model per day).
 - Wish list shape (stored in the historically named `masked_hints` column):
   `{ hints: [flat], groups: [{ label, hints }], exact: [] }` — labels are the English tag names
