@@ -118,6 +118,8 @@ HANDOVER.md          → handover document for further development (for you and 
    - [ ] hint email → "Save these hints to your phone" → the card shows the wisher's name; save / send / copy work on a phone
    - [ ] Slovenian wishes give Slovenian hints
    - [ ] a general wish ("an interesting book about history") comes back as written (typos fixed), a branded one is hidden
+   - [ ] "needs: slippers, a comb, hair wax" → three separate hints under the heading "Needs" (preview, email and saved picture)
+   - [ ] the tags (needs:, wants: …) are coloured in the wishes box; the wax seal takes you back to the start
    - [ ] get flow: the invite arrives and its button opens the page with the right occasion
    - [ ] feedback widget: the message arrives at `FEEDBACK_TO`
    - [ ] "Preview" 6 times in a row within an hour → a friendly "take a little break" message

@@ -40,6 +40,9 @@ see only hints, so choosing the gift stays theirs and the surprise survives.
   - preview step with inline editing (add / edit / delete) of the hints
   - get form (requester name + email, target email, occasion)
   - success view
+  - the wax seal on the sheet corner is the home button (`#home-seal`, switches to the landing view in place)
+  - the wishes box colours the line tags (needs:, wants: …) with a mirror layer behind a transparent-text
+    textarea (`.wish-mirror`, `syncWishes()`); the box grows with its content
   - floating feedback widget (speech-bubble button → suggestion / bug / other)
   - brand mark = red wax seal with a serif "H": `favicon.svg` (tab icon on every page, incl.
     the confirm / unsubscribe pages rendered by `api/confirm.js` + `api/unsubscribe.js`),
@@ -86,6 +89,12 @@ see only hints, so choosing the gift stays theirs and the surprise survives.
   meaning and detail, only spelling/grammar fixed and put in the hint voice; "specific" ones (any brand,
   model, title, name) are masked. A branded wish the model calls "general" (e.g. "Nike long socks" →
   "long socks") is re-asked as specific (`redoMisread()`, guarded by `isGeneral()`).
+  Since Oct 2026 the output is GROUPED: one group per input line, labelled by its tag ("needs:" →
+  "Needs" / "Potrebno", "wants:" → "Would love" / "Zaželeno", …, untagged → ""), and every comma-separated
+  wish is its own item (people write "needs: slippers, a comb, hair wax"). Stored as
+  `masked_hints = { hints: [flat], groups: [{label, hints}], exact: [] }` (max 30 hints / 12 groups,
+  `MAX_HINTS` in lib/gemini.js + lib/validate.js); preview, emails and the save page render the groups,
+  and fall back to the flat list for older submissions.
   Run the eval after every prompt change and read the hints yourself.
 - The Gemini key must have **billing enabled**: free tier = ~20 requests per model per day (the
   site becomes slow / fails once used up), and free-tier data may be used by Google, while

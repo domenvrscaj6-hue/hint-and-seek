@@ -87,7 +87,11 @@ export default async function handler(req, res) {
       name: String(sub.sender_name || ""),
       label: OCCASION_LABEL[sub.occasion] || OCCASION_LABEL.other,
       date: new Date(sub.created_at).toLocaleDateString("en-GB", { month: "long", year: "numeric" }),
-      hints: (sub.masked_hints?.hints || []).map(String),
+      // groups ("Needs", "Would love", …) when present; older submissions are one plain list
+      groups: (Array.isArray(sub.masked_hints?.groups) && sub.masked_hints.groups.length
+        ? sub.masked_hints.groups
+        : [{ label: "", hints: sub.masked_hints?.hints || [] }]
+      ).map(g => ({ label: String(g.label || ""), hints: (g.hints || []).map(String) })).filter(g => g.hints.length),
       note: sub.special_notes ? String(sub.special_notes) : ""
     };
     await track("hints_page_view", { occasion: sub.occasion });
@@ -123,7 +127,9 @@ const CLIENT_JS = String.raw`
   var blob = null;
 
   var text = d.label + " from " + d.name + " (" + d.date + ")\n" +
-    d.hints.map(function(h){ return "✦ " + h; }).join("\n") +
+    d.groups.map(function(g){
+      return (g.label ? g.label + ":\n" : "") + g.hints.map(function(h){ return "✦ " + h; }).join("\n");
+    }).join("\n\n") +
     (d.note ? "\n\nA note from " + d.name + ": " + d.note : "") +
     "\n\n— via Hint & Seek, hintandseek.com";
 
@@ -148,10 +154,11 @@ const CLIENT_JS = String.raw`
 
     // measure first, then size the canvas
     ctx.font = HAND; var nameLines = wrap(ctx, d.name, inner - 40);
-    ctx.font = BODY; var hintLines = d.hints.map(function(h){ return wrap(ctx, h, inner - 56); });
+    ctx.font = BODY;
+    var groups = d.groups.map(function(g){ return { label: g.label, items: g.hints.map(function(h){ return wrap(ctx, h, inner - 56); }) }; });
     ctx.font = NOTE; var noteLines = d.note ? wrap(ctx, d.note, inner - 60) : [];
     var H = 150 + 70 + nameLines.length * 112 + 64 + 60;
-    hintLines.forEach(function(l){ H += l.length * 58 + 34; });
+    groups.forEach(function(g){ if(g.label) H += 56; g.items.forEach(function(l){ H += l.length * 58 + 34; }); });
     if(noteLines.length) H += 70 + noteLines.length * 50 + 60;
     H += 130;
     c.width = W; c.height = H;
@@ -193,14 +200,25 @@ const CLIENT_JS = String.raw`
     ctx.moveTo(P, y + 30); ctx.bezierCurveTo(P + 90, y + 18, P + 170, y + 44, P + 260, y + 28); ctx.stroke();
     y += 60;
     // hints
-    hintLines.forEach(function(lines){
+    groups.forEach(function(g){
+      if(g.label){
+        y += 76;
+        ctx.fillStyle = "#a4443a"; ctx.font = "600 28px 'EB Garamond', Georgia, serif";
+        if("letterSpacing" in ctx) ctx.letterSpacing = "4px";
+        ctx.fillText(g.label.toUpperCase(), P, y);
+        if("letterSpacing" in ctx) ctx.letterSpacing = "0px";
+        y -= 20;
+      }
+      g.items.forEach(drawHint);
+    });
+    function drawHint(lines){
       y += 34;
       ctx.fillStyle = "#a4443a"; ctx.font = "34px Georgia, serif"; ctx.fillText("✦", P, y + 44);
       ctx.fillStyle = "#3a2c1c"; ctx.font = BODY;
       lines.forEach(function(l, i){ ctx.fillText(l, P + 56, y + 44 + i * 58); });
       y += lines.length * 58;
       ctx.strokeStyle = "#d8c9a8"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(P + 56, y + 20); ctx.lineTo(W - P, y + 20); ctx.stroke();
-    });
+    }
     // note
     if(noteLines.length){
       y += 70;
