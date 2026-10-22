@@ -25,8 +25,9 @@ showed that people mostly write general wishes anyway (nothing to hide), and tho
 ("Nike Pegasus, size 42") want exactly that — hiding it is a disservice. So: the list is tidied in the
 browser (`parseWishList()` in `index.html`) and sent as written; the value is *easy writing* (tags),
 *one-click sharing* and the phone card. AI returns as an on-demand **gift-ideas helper for givers**
-(done, Oct 2026): on the save page a giver taps a wish, sets a budget and an optional note, and gets
-3 concrete ideas — the AI is only called when someone asks. Don't bring masking back
+(done, Oct 2026): the save page has tabs — 3 shared picks made once per list, 3 picks "for you"
+(focus topics, relationship, budget, what the giver knows) and 3 ideas per wish made once per wish.
+The AI is only called when a tab or a wish is opened, and everything shared is made once. Don't bring masking back
 without new evidence (`mask_ok` analytics with `specific`/`general` counts exist for older data).
 
 ## 2. Current state (October 2026) — DONE
@@ -76,14 +77,28 @@ without new evidence (`mask_ok` analytics with `specific`/`general` counts exist
   automatic model fallback (`GEMINI_MODEL` or `gemini-3.6-flash` → `gemini-3.5-flash` →
   `gemini-3-flash-preview` → `gemini-2.5-flash`). Not used by the give flow any more; kept for the
   gift-ideas feature. Measured Oct 2026: a gift-ideas request ≈ 170 in / 220 out tokens ≈ 0.2 cent, ~2 s.
-- Gift ideas: `api/ideas.js` + `lib/ideas.js`, UI in the save page (`api/hints.js`, "Not sure what to pick?").
-  Guards: signed link (same id+sig as the save page), the wish must be on that list, `LIMITS.ideas`
-  (10/h per IP), `MAX_PER_LIST` = 30 AI answers per list (`ideas_count`), answers cached per
-  wish+budget+note in `ideas_cache` (jsonb, max 40). Budgets: 10/20/30/50/100/200 €. Prompt rules learned
-  in testing: keep titles in the original ("Atomic Habits", never a translation), name a specific
-  title/model only when sure it exists (else describe the type), exact wishes → that item first,
-  language = the list's main language; output is cleaned of stray non-Latin characters. If the
-  `ideas_*` columns are missing (schema not re-run) it still answers, just without cache/cap.
+- Gift ideas: `api/ideas.js` + `lib/ideas.js`, UI = tabs on the save page (`api/hints.js`):
+  **The list** (card + save/send/copy) | **✦ Picks** | **For you** | **By wish**. The email's "✦ Gift ideas"
+  button opens `#picks` (old `#ideas` links also land there). Less text on purpose — users found one
+  long page with everything tiring.
+  - `mode: "shared"` → `sharedPicks()`: a short profile (noun phrase), 5–7 focus topics with the list
+    items they cover, and 3 picks (safe < 20 €, thoughtful 30–50 €, surprise 60–100 € that is NOT on the
+    list). Made by the first visitor, cached as `ideas_cache.shared`, embedded in the page for everyone
+    after that (instant tab). It doesn't count toward the per-list cap.
+  - `mode: "wish"` → `wishIdeas()`: 3 ideas for one wish, cheaper → pricier, cached as `w:<hash>`.
+  - `mode: "personal"` → `personalPicks()`: the giver picks focus topics (chips from the shared topics —
+    a giver who'd never buy make-up picks "Sport"), relationship (partner/family/friend/colleague/other),
+    budget (20/30/50/100/200 €) and an optional note (max 300 chars); cached as `p:<hash of inputs>`.
+  Guards: signed link (same id+sig as the save page), wishes must be on the list, topics must be from the
+  shared snapshot, `LIMITS.ideas` (10/h per IP, counted only when the AI is actually called),
+  `MAX_PER_LIST` = 30 AI answers per list (`ideas_count`), max 40 cached answers (`ideas_cache` jsonb;
+  personal answers are evicted first, then per-wish, never the shared one). Prompt rules learned in testing:
+  never the person's name or a gendered word/verb form (Slovenian "rada", "študent"), and a post-filter
+  strips "men's/women's/moška/ženska…" from gifts and search queries; product names exactly as sold,
+  books as original title + author ("Atomic Habits (James Clear)"), never a translation; name a specific
+  title/model only when sure it exists (else describe the type); language = the list's main language;
+  output is cleaned of stray non-Latin characters. If the `ideas_*` columns are missing (schema not re-run)
+  it still answers, just without cache/cap.
   The key needs **billing enabled** (free tier ≈ 20 requests per model per day).
 - Wish list shape (stored in the historically named `masked_hints` column):
   `{ hints: [flat], groups: [{ label, hints }], exact: [] }` — labels are the English tag names
@@ -92,7 +107,7 @@ without new evidence (`mask_ok` analytics with `specific`/`general` counts exist
   `parseWishList()`); preview, emails and the save page render the groups and fall back to the flat
   list for older rows.
 - Emails (`lib/emails.js`): four occasion themes, inline-styled HTML; list emails show the grouped
-  "✦" wishes, the sender's note and two buttons, "Save this list" and "✦ Get gift ideas" (→ `#ideas`); confirmation email warns
+  "✦" wishes, the sender's note and two buttons, "Save this list" and "✦ Gift ideas" (→ `#picks`); confirmation email warns
   the sender that recipients should check their spam folder. List and invite emails carry RFC 8058 one-click
   List-Unsubscribe headers. (The "✓ Exact Wishes" block only renders for old stored rows.)
 - Fail-safe philosophy: if ANY step fails, nothing is sent.
@@ -311,6 +326,8 @@ Several sessions have already built the same feature twice on separate branches
 - Partial send failures in `confirm.js`: recipients whose email failed are not retried.
 - The requester email in the Get flow is not verified. The target sees it and can remove it;
   a real fix would be a confirmation email for the requester.
+- Gift ideas, later: affiliate links on "Search ↗" (planned — the `search` query is already separate
+  from the shown gift name, so a shop link can be swapped in one place, `searchLink()` in `api/hints.js`).
 - There are no automated tests; everything was checked by hand with mocked services,
   headless Chromium and local Postgres. A small zero-dependency `node --test` suite would help.
 - PR #4 (`happy-turing`, visual polish) is merged. This PR (#5) also carries the `epic-hopper`

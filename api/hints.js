@@ -6,6 +6,9 @@
 // one person may collect cards from several people.
 // It shows the same content as the email. The page works as long
 // as the submission is kept: sent submissions are deleted after 90 days (cleanup in schema.sql).
+// Tabs, so it never feels like too much at once: The list (the card) | ✦ Picks (3 picks made once for
+// everyone) | For you (3 picks for one giver) | By wish (3 ideas per wish, made once). The email's
+// "Gift ideas" button opens #picks. The AI work is in api/ideas.js + lib/ideas.js.
 
 import { selectRows } from "../lib/store.js";
 import { verifyHintsSig } from "../lib/security.js";
@@ -51,32 +54,77 @@ function shell(title, body) {
   .home{margin-top:26px;font-size:14px}
   .home a{color:#cdbd9c}
   .box{background:#f3ead7;border-radius:4px;padding:36px 28px;box-shadow:0 10px 30px rgba(0,0,0,.45)}
-  /* gift ideas (api/ideas.js) */
-  .ideas{margin-top:26px;background:#f3ead7;border-radius:4px;padding:24px 20px 20px;text-align:left;
-    box-shadow:0 10px 30px rgba(0,0,0,.45)}
-  .ideas h2{font-family:'Caveat',cursive;font-size:32px;line-height:1.1}
-  .ideas .sub{font-size:16px;color:#5c4a33;line-height:1.45;margin-top:4px}
-  .ideas .lab{font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#a4443a;margin:16px 0 6px}
+  [hidden]{display:none!important}
+  button:disabled{opacity:.6;cursor:default}
+  /* header + tabs */
+  .top h1{font-family:'Caveat',cursive;font-size:30px;line-height:1.1;color:#f3ead7;margin:0}
+  .tabs{position:sticky;top:0;z-index:5;background:#2e2318;padding:10px 0 16px}
+  .tabbar{display:flex;gap:4px;background:rgba(243,234,215,.07);border:1px solid rgba(205,189,156,.3);border-radius:8px;padding:4px}
+  .tab{flex:1;font-family:'EB Garamond',Georgia,serif;font-size:16px;font-weight:600;color:#cdbd9c;background:none;box-shadow:none;
+    border-radius:6px;padding:7px 2px;white-space:nowrap}
+  .tab[aria-selected="true"]{background:#f3ead7;color:#3a2c1c}
+  .tab:active{transform:none}
+  .narrow{max-width:460px;margin:0 auto}
+  .nudge{width:100%;margin-top:6px;font-family:'EB Garamond',Georgia,serif;font-size:17px;font-weight:400;font-style:italic;
+    color:#e6d9bd;background:none;box-shadow:none;border:1px dashed rgba(205,189,156,.5);padding:11px 14px}
+  .nudge u{font-style:normal;font-weight:600;text-underline-offset:3px}
+  /* gift-ideas panels (api/ideas.js) */
+  .panel{background:#f3ead7;border-radius:4px;padding:22px 18px 20px;text-align:left;box-shadow:0 10px 30px rgba(0,0,0,.45)}
+  .panel h2{font-family:'Caveat',cursive;font-size:32px;line-height:1.1}
+  .sub,.profile{font-size:16px;color:#5c4a33;line-height:1.45;margin-top:4px}
+  .profile{font-style:italic}
+  .picks{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:16px}
+  .picks>.err,.picks>.link{grid-column:1/-1}
+  .pick{background:#efe4c9;border:1px solid #d8c9a8;border-radius:3px 6px 4px 7px;padding:12px 14px;display:flex;flex-direction:column;
+    box-shadow:0 1px 2px rgba(0,0,0,.1),0 6px 14px rgba(0,0,0,.07)}
+  .pick:nth-child(odd){transform:rotate(-.4deg)} .pick:nth-child(even){transform:rotate(.4deg)}
+  .pick-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:8px}
+  .pick-foot .search{margin-top:0}
+  .kind{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase}
+  .k-safe{color:#5a7a4a} .k-thoughtful{color:#a4443a} .k-surprise{color:#a8752a}
+  .price{font-weight:600;color:#a4443a;white-space:nowrap}
+  .pick b{font-family:'Caveat',cursive;font-size:24px;line-height:1.1;margin-top:3px}
+  .why{font-size:15px;color:#5c4a33;line-height:1.4;margin-top:4px}
+  .pick .why{flex:1}
+  .search{display:inline-block;margin-top:8px;font-size:14px;color:#a4443a;border:1px solid #a4443a;
+    border-radius:12px;padding:1px 10px;text-decoration:none}
+  .skel{min-height:150px;background:linear-gradient(100deg,#efe4c9 30%,#f7f0de 50%,#efe4c9 70%);background-size:300% 100%;
+    animation:shimmer 1.4s linear infinite}
+  @keyframes shimmer{from{background-position:100% 0}to{background-position:-50% 0}}
+  @media (prefers-reduced-motion:reduce){.skel{animation:none}}
+  .wait,.err{font-style:italic;color:#76695a;font-size:15px;margin-top:10px}
+  .err{color:#a4443a}
+  .link{font-family:'EB Garamond',Georgia,serif;font-size:16px;font-weight:600;color:#a4443a;background:none;box-shadow:none;
+    padding:12px 0 0;text-decoration:underline;text-underline-offset:3px;justify-content:flex-start}
+  .link:active{transform:none}
+  .q{font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#a4443a;margin:18px 0 7px}
+  .q .opt{font-weight:400;letter-spacing:0;text-transform:none;font-style:italic;font-size:14px;color:#76695a}
   .chips{display:flex;flex-wrap:wrap;gap:6px}
   .chip{font-family:'EB Garamond',Georgia,serif;font-size:16px;font-weight:600;padding:4px 12px;border-radius:14px;
     border:1px solid #b8a582;background:#eadfc4;color:#5c4a33;box-shadow:none}
   .chip[aria-pressed="true"]{background:#a4443a;border-color:#7e332b;color:#fdf6e6}
-  .ideas input{width:100%;font-family:'EB Garamond',Georgia,serif;font-size:16px;padding:8px 10px;color:#3a2c1c;
-    background:transparent;border:1px solid #b8a582;border-radius:3px}
-  .ideas input:focus{outline:none;border-color:#a4443a;box-shadow:0 0 0 1px #a4443a}
-  .wishes{margin-top:6px}
-  .wish-btn{width:100%;justify-content:space-between;text-align:left;font-family:'EB Garamond',Georgia,serif;font-size:17px;
-    font-weight:400;padding:10px 4px;border-radius:0;background:none;color:#3a2c1c;box-shadow:none;border-bottom:1px solid #d8c9a8}
-  .wish-btn span.go{font-style:italic;font-size:15px;color:#a4443a;white-space:nowrap}
-  .wish-btn:active{transform:none}
-  .out{padding:8px 4px 12px}
-  .out .idea{margin-top:10px}
-  .out .idea b{font-weight:600}
-  .out .price{color:#a4443a;font-weight:600;margin-left:6px;white-space:nowrap}
-  .out .why{font-size:15px;color:#5c4a33;line-height:1.4}
-  .out a{font-size:14px;color:#a4443a}
-  .out .wait,.out .err{font-style:italic;color:#76695a;font-size:15px}
+  .chip.multi[aria-pressed="true"]::before{content:"✓";margin-right:-4px}
+  .chip:active{transform:none}
+  textarea{width:100%;font-family:'EB Garamond',Georgia,serif;font-size:16px;line-height:1.4;padding:8px 10px;color:#3a2c1c;
+    background:transparent;border:1px solid #b8a582;border-radius:3px;resize:vertical}
+  textarea:focus{outline:none;border-color:#a4443a;box-shadow:0 0 0 1px #a4443a}
+  .go{width:100%;margin-top:18px}
+  #mine{scroll-margin-top:90px}
+  .lab{font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#a4443a;margin:20px 0 2px}
+  details{border-bottom:1px solid #d8c9a8}
+  summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 2px;font-size:17px}
+  summary::-webkit-details-marker{display:none}
+  summary:focus-visible{outline:2px dashed #a4443a;outline-offset:2px}
+  .star{flex:0 0 auto;color:#a4443a;font-size:14px;border:1px solid #b8a582;border-radius:50%;width:28px;height:28px;
+    display:inline-flex;align-items:center;justify-content:center;background:#eadfc4}
+  details[open] .star{background:#a4443a;color:#fdf6e6;border-color:#7e332b}
+  .mini{padding:0 2px 12px}
+  .mini .idea{margin-top:10px}
+  .mini .idea b{font-weight:600}
+  .mini .price{margin-left:6px}
+  .mini .search{margin-top:4px;font-size:13px}
   .fine{font-size:13px;font-style:italic;color:#76695a;margin-top:14px}
+  @media (min-width:700px){ .wrap{max-width:660px} }
   h1{font-family:'Caveat',cursive;font-size:38px;margin-bottom:10px}
   .box p{font-size:17px;line-height:1.55;color:#5c4a33}
 </style></head><body><div class="wrap">${body}</div></body></html>`;
@@ -99,10 +147,9 @@ export default async function handler(req, res) {
   }
 
   try {
-    const rows = await selectRows("hint_submissions", {
-      select: "sender_name,occasion,masked_hints,special_notes,created_at,status",
-      id: `eq.${id}`
-    });
+    const query = (cols) => selectRows("hint_submissions", { select: `sender_name,occasion,masked_hints,special_notes,created_at,status${cols}`, id: `eq.${id}` });
+    // ideas_cache comes from schema.sql (Oct 2026); without it the Picks tab simply asks /api/ideas
+    const rows = await query(",ideas_cache").catch(e => { if (/ideas_/.test(e.message)) return query(""); throw e; });
     const sub = rows[0];
     if (!sub || sub.status !== "sent") {
       return res.status(404).send(errorPage("This list is gone",
@@ -121,31 +168,68 @@ export default async function handler(req, res) {
       note: sub.special_notes ? String(sub.special_notes) : ""
     };
     data.id = id; data.sig = sig; // for the gift-ideas requests from this page
+    const shared = sub.ideas_cache?.shared;
+    data.shared = shared ? { profile: shared.profile || "", topics: (shared.topics || []).map(t => t.name), picks: shared.picks || [] } : null;
     await track("hints_page_view", { occasion: sub.occasion });
 
     // JSON inside <script>: escape "<" so no text can close the tag
     const json = JSON.stringify(data).replace(/</g, "\\u003c");
     const title = `${esc(data.label)} from ${esc(data.name)}`;
+    const name = esc(data.name);
     const body = `
-  <img class="card loading" id="card" alt="${title}">
-  <p class="tip">Press and hold the picture to save it, or use the buttons.</p>
-  <div class="btns">
-    <button class="primary" id="save" type="button"><svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 19h14"/></svg>Save as picture</button>
-    <button class="secondary" id="share" type="button"><svg viewBox="0 0 24 24"><path d="M4 12l16-8-6 16-3-7-7-1z"/></svg>Send to someone</button>
-    <button class="secondary" id="copy" type="button"><svg viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg>Copy text</button>
-  </div>
-  <p class="msg" id="msg" aria-live="polite"></p>
-  <section class="ideas" id="ideas" aria-labelledby="ideas-title">
-    <h2 id="ideas-title">Not sure what to pick?</h2>
-    <p class="sub">Tap a wish and get 3 gift ideas that fit your budget.</p>
-    <p class="lab">Your budget</p>
-    <div class="chips" id="budget" role="group" aria-label="Budget"></div>
-    <p class="lab"><label for="ideas-note">Anything to keep in mind? (optional)</label></p>
-    <input id="ideas-note" maxlength="200" placeholder="e.g. for two players, already has Catan">
-    <p class="lab">Wishes</p>
-    <div class="wishes" id="wish-buttons"></div>
-    <p class="fine">Ideas are suggested by AI — prices are approximate, so check in the shop before you buy.</p>
+  <header class="top"><h1>${title}</h1></header>
+  <div class="tabs"><div class="tabbar" role="tablist" aria-label="The list and gift ideas">
+    <button class="tab" role="tab" id="t-list" aria-controls="p-list" type="button">The list</button>
+    <button class="tab" role="tab" id="t-picks" aria-controls="p-picks" type="button">✦ Picks</button>
+    <button class="tab" role="tab" id="t-you" aria-controls="p-you" type="button">For you</button>
+    <button class="tab" role="tab" id="t-wish" aria-controls="p-wish" type="button">By wish</button>
+  </div></div>
+
+  <section class="narrow" id="p-list" role="tabpanel" aria-labelledby="t-list">
+    <img class="card loading" id="card" alt="${title}">
+    <p class="tip">Press and hold the picture to save it, or use the buttons.</p>
+    <div class="btns">
+      <button class="primary" id="save" type="button"><svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 19h14"/></svg>Save as picture</button>
+      <button class="secondary" id="share" type="button"><svg viewBox="0 0 24 24"><path d="M4 12l16-8-6 16-3-7-7-1z"/></svg>Send to someone</button>
+      <button class="secondary" id="copy" type="button"><svg viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg>Copy text</button>
+    </div>
+    <p class="msg" id="msg" aria-live="polite"></p>
+    <button class="nudge" type="button" data-go="picks">✦ Not sure what to pick? <u>Gift ideas</u></button>
   </section>
+
+  <section class="panel" id="p-picks" role="tabpanel" aria-labelledby="t-picks" hidden>
+    <h2>3 picks from the list</h2>
+    <p class="profile" id="profile"></p>
+    <div class="picks" id="shared-picks" aria-live="polite"></div>
+    <p class="fine">The same for everyone ${name} sent the list to. Prices are approximate.</p>
+    <button class="link" type="button" data-go="you">Want 3 picks just for you? →</button>
+  </section>
+
+  <section class="panel" id="p-you" role="tabpanel" aria-labelledby="t-you" hidden>
+    <h2>3 picks just for you</h2>
+    <p class="sub">A few taps — the ideas stay inside what you know.</p>
+    <div id="focus-wrap">
+      <p class="q" id="focus-q">Focus on <span class="opt">pick any</span></p>
+      <div class="chips" id="focus" role="group" aria-labelledby="focus-q"></div>
+    </div>
+    <p class="q" id="rel-q">Who are you to ${name}?</p>
+    <div class="chips" id="relation" role="group" aria-labelledby="rel-q"></div>
+    <p class="q" id="bud-q">Budget</p>
+    <div class="chips" id="budget" role="group" aria-labelledby="bud-q"></div>
+    <p class="q"><label for="note">What do you know about them?</label> <span class="opt">optional</span></p>
+    <textarea id="note" rows="2" maxlength="300" placeholder="e.g. we run together at weekends; already has Catan"></textarea>
+    <button class="primary go" id="go" type="button">Show my 3 picks</button>
+    <div id="mine" aria-live="polite"></div>
+    <p class="fine">Made only for you. The AI gets the list and your answers — never names or emails.</p>
+  </section>
+
+  <section class="panel" id="p-wish" role="tabpanel" aria-labelledby="t-wish" hidden>
+    <h2>Ideas for one wish</h2>
+    <p class="sub">Tap a wish for 3 ideas.</p>
+    <div id="wish-list"></div>
+    <p class="fine">The same for everyone. Prices are approximate.</p>
+  </section>
+
   <p class="home"><a href="/">Make your own wish list on Hint &amp; Seek</a></p>
   <script type="application/json" id="data">${json}</script>
   <script>${CLIENT_JS}</script>`;
@@ -331,63 +415,166 @@ const CLIENT_JS = String.raw`
   }
   document.getElementById("copy").addEventListener("click", copy);
 
-  /* ---------- gift ideas: the AI is called only when someone taps a wish ---------- */
-  var BUDGETS = [10, 20, 30, 50, 100, 200], budget = 30;
-  var budgetBox = document.getElementById("budget");
-  BUDGETS.forEach(function(v){
-    var c = document.createElement("button");
-    c.type = "button"; c.className = "chip"; c.textContent = v + " €";
-    c.setAttribute("aria-pressed", v === budget ? "true" : "false");
-    c.addEventListener("click", function(){
-      budget = v;
-      Array.prototype.forEach.call(budgetBox.children, function(x){ x.setAttribute("aria-pressed", x === c ? "true" : "false"); });
+  /* ---------- tabs: the list | shared picks | picks for you | ideas per wish ---------- */
+  var TABS = ["list", "picks", "you", "wish"], opened = {};
+  var tabsEl = document.querySelector(".tabs");
+  function show(name, how){
+    TABS.forEach(function(t){
+      var on = t === name, tab = document.getElementById("t-" + t);
+      tab.setAttribute("aria-selected", on ? "true" : "false");
+      tab.tabIndex = on ? 0 : -1;
+      document.getElementById("p-" + t).hidden = !on;
     });
-    budgetBox.appendChild(c);
+    if(how){
+      if(how === "key") document.getElementById("t-" + name).focus();
+      try { history.replaceState(null, "", "#" + name); } catch(e){}
+      if(window.scrollY > tabsEl.offsetTop) window.scrollTo(0, tabsEl.offsetTop);
+    }
+    if(!opened[name]){
+      opened[name] = true;
+      if(name === "picks") loadShared();
+      if(name === "you") loadFocus();
+    }
+  }
+  TABS.forEach(function(t, i){
+    var tab = document.getElementById("t-" + t);
+    tab.addEventListener("click", function(){ show(t, "click"); });
+    tab.addEventListener("keydown", function(e){
+      var k = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
+      if(k){ e.preventDefault(); show(TABS[(i + k + TABS.length) % TABS.length], "key"); }
+    });
   });
-  var wishBox = document.getElementById("wish-buttons");
-  d.groups.forEach(function(g){
-    g.hints.forEach(function(w){
-      var b = document.createElement("button");
-      b.type = "button"; b.className = "wish-btn";
-      var t = document.createElement("span"); t.textContent = w;
-      var go = document.createElement("span"); go.className = "go"; go.textContent = "Ideas →";
-      b.appendChild(t); b.appendChild(go);
-      var out = document.createElement("div"); out.className = "out"; out.hidden = true;
-      b.addEventListener("click", function(){ askIdeas(w, out, go); });
-      wishBox.appendChild(b); wishBox.appendChild(out);
-    });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-go]"), function(b){
+    b.addEventListener("click", function(){ show(b.getAttribute("data-go"), "click"); });
   });
 
-  function line(cls, txt){ var p = document.createElement("p"); p.className = cls; p.textContent = txt; return p; }
-
-  function askIdeas(wish, out, go){
-    out.hidden = false; out.innerHTML = ""; out.appendChild(line("wait", "Thinking of ideas…"));
-    go.textContent = "…";
-    fetch("/api/ideas", {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: d.id, sig: d.sig, wish: wish, budget: budget, note: document.getElementById("ideas-note").value })
-    }).then(function(r){
-      return r.json().catch(function(){ return {}; }).then(function(j){ if(!r.ok) throw new Error(j.error || "Couldn't get ideas — please try again."); return j; });
-    }).then(function(j){
-      out.innerHTML = "";
-      (j.ideas || []).forEach(function(i){
-        var box = document.createElement("div"); box.className = "idea";
-        var head = document.createElement("p");
-        var name = document.createElement("b"); name.textContent = i.idea; head.appendChild(name);
-        if(i.price){ var pr = document.createElement("span"); pr.className = "price"; pr.textContent = i.price; head.appendChild(pr); }
-        box.appendChild(head);
-        if(i.why) box.appendChild(line("why", i.why));
-        var a = document.createElement("a");
-        a.href = "https://www.google.com/search?q=" + encodeURIComponent(i.idea);
-        a.target = "_blank"; a.rel = "noopener"; a.textContent = "Search ↗";
-        box.appendChild(a);
-        out.appendChild(box);
+  /* ---------- gift ideas: the AI is only called when a tab or a wish is opened, and each answer is kept ---------- */
+  function el(tag, cls, txt){ var e = document.createElement(tag); if(cls) e.className = cls; if(txt != null) e.textContent = txt; return e; }
+  function post(body){
+    body.id = d.id; body.sig = d.sig;
+    return fetch("/api/ideas", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })
+      .then(function(r){
+        return r.json().catch(function(){ return {}; }).then(function(j){ if(!r.ok) throw new Error(j.error || "Couldn't get ideas — please try again."); return j; });
       });
-      go.textContent = "Again →";
-    }).catch(function(e){
-      out.innerHTML = ""; out.appendChild(line("err", e.message || "Couldn't get ideas — please try again."));
-      go.textContent = "Ideas →";
+  }
+  function searchLink(p){
+    var a = el("a", "search", "Search ↗");
+    a.href = "https://www.google.com/search?q=" + encodeURIComponent(p.search || p.gift);
+    a.target = "_blank"; a.rel = "noopener";
+    return a;
+  }
+  var KIND = { safe: "Safe · from the list", thoughtful: "Thoughtful · a mix", surprise: "Surprise · not on the list" };
+  function pickCard(p){
+    var c = el("div", "pick"), foot = el("div", "pick-foot");
+    c.appendChild(el("span", "kind k-" + (KIND[p.kind] ? p.kind : "safe"), KIND[p.kind] || "Idea"));
+    c.appendChild(el("b", "", p.gift));
+    if(p.why) c.appendChild(el("p", "why", p.why));
+    foot.appendChild(el("span", "price", p.price || ""));
+    foot.appendChild(searchLink(p));
+    c.appendChild(foot);
+    return c;
+  }
+  function fill(box, picks){ box.innerHTML = ""; picks.forEach(function(p){ box.appendChild(pickCard(p)); }); }
+  function skeletons(box){ box.innerHTML = ""; for(var i = 0; i < 3; i++) box.appendChild(el("div", "pick skel")); }
+  function failed(box, message, retry){
+    box.innerHTML = "";
+    box.appendChild(el("p", "err", message));
+    var b = el("button", "link", "Try again"); b.type = "button";
+    b.addEventListener("click", retry);
+    box.appendChild(b);
+  }
+
+  // shared picks + focus topics: made once for the whole list (often already in the page)
+  var sharedReq = null;
+  function getShared(){
+    if(d.shared) return Promise.resolve(d.shared);
+    if(!sharedReq) sharedReq = post({ mode: "shared" }).then(function(j){ d.shared = j; return j; }, function(e){ sharedReq = null; throw e; });
+    return sharedReq;
+  }
+  function loadShared(){
+    var box = document.getElementById("shared-picks"), profile = document.getElementById("profile");
+    if(!d.shared){ skeletons(box); profile.textContent = "Reading the list — a few seconds, only the first time."; }
+    getShared().then(function(s){
+      profile.textContent = s.profile || "";
+      fill(box, s.picks || []);
+    }, function(e){ profile.textContent = ""; failed(box, e.message, loadShared); });
+  }
+
+  // picks for you
+  function chips(box, items, multi, selected){
+    box.innerHTML = "";
+    items.forEach(function(v){
+      var c = el("button", "chip" + (multi ? " multi" : ""), v.label); c.type = "button";
+      c.setAttribute("data-value", v.value);
+      c.setAttribute("aria-pressed", v.value === selected ? "true" : "false");
+      c.addEventListener("click", function(){
+        if(multi) c.setAttribute("aria-pressed", c.getAttribute("aria-pressed") === "true" ? "false" : "true");
+        else Array.prototype.forEach.call(box.children, function(x){ x.setAttribute("aria-pressed", x === c ? "true" : "false"); });
+      });
+      box.appendChild(c);
     });
   }
+  function chosen(box){
+    return Array.prototype.filter.call(box.children, function(x){ return x.getAttribute("aria-pressed") === "true"; })
+      .map(function(x){ return x.getAttribute("data-value"); });
+  }
+  var focusBox = document.getElementById("focus"), relBox = document.getElementById("relation"), budBox = document.getElementById("budget");
+  chips(relBox, ["partner", "family", "friend", "colleague", "other"].map(function(v){ return { label: v, value: v }; }), false, "");
+  chips(budBox, [20, 30, 50, 100, 200].map(function(v){ return { label: v + " €", value: String(v) }; }), false, "50");
+  function loadFocus(){
+    if(!d.shared){ focusBox.innerHTML = ""; focusBox.appendChild(el("span", "wait", "Loading topics…")); }
+    getShared().then(function(s){
+      var topics = s.topics || [];
+      document.getElementById("focus-wrap").hidden = !topics.length;
+      chips(focusBox, topics.map(function(n){ return { label: n, value: n }; }), true, null);
+    }, function(){ document.getElementById("focus-wrap").hidden = true; });
+  }
+  var go = document.getElementById("go"), mine = document.getElementById("mine");
+  go.addEventListener("click", function(){
+    var box = el("div", "picks");
+    mine.innerHTML = ""; mine.appendChild(box); skeletons(box);
+    go.disabled = true; go.textContent = "Thinking…";
+    post({ mode: "personal", topics: chosen(focusBox), relation: chosen(relBox)[0] || "",
+           budget: Number(chosen(budBox)[0] || 50), note: document.getElementById("note").value })
+      .then(function(j){ fill(box, j.picks || []); }, function(e){ mine.innerHTML = ""; mine.appendChild(el("p", "err", e.message)); })
+      .then(function(){
+        go.disabled = false; go.textContent = "Show my 3 picks";
+        if(mine.scrollIntoView) mine.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+  });
+
+  // ideas per wish: made once per wish, the same for everyone
+  var wishList = document.getElementById("wish-list");
+  d.groups.forEach(function(g){
+    if(g.label) wishList.appendChild(el("p", "lab", g.label));
+    g.hints.forEach(function(w){
+      var det = el("details"), sum = el("summary"), out = el("div", "mini"), star = el("span", "star", "✦");
+      star.setAttribute("aria-hidden", "true");
+      sum.appendChild(el("span", "", w)); sum.appendChild(star);
+      det.appendChild(sum); det.appendChild(out);
+      var state = "";   // "" → "loading" → "done"
+      function load(){
+        state = "loading";
+        out.innerHTML = ""; out.appendChild(el("p", "wait", "Thinking of ideas…"));
+        post({ mode: "wish", wish: w }).then(function(j){
+          state = "done"; out.innerHTML = "";
+          (j.picks || []).forEach(function(p){
+            var i = el("div", "idea"), head = el("p");
+            head.appendChild(el("b", "", p.gift));
+            if(p.price) head.appendChild(el("span", "price", p.price));
+            i.appendChild(head);
+            if(p.why) i.appendChild(el("p", "why", p.why));
+            i.appendChild(searchLink(p));
+            out.appendChild(i);
+          });
+        }, function(e){ state = ""; failed(out, e.message, load); });
+      }
+      det.addEventListener("toggle", function(){ if(det.open && !state) load(); });
+      wishList.appendChild(det);
+    });
+  });
+
+  var start = (location.hash || "").slice(1);
+  show(start === "ideas" ? "picks" : TABS.indexOf(start) >= 0 ? start : "list");
 })();
 `;

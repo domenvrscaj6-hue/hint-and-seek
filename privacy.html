@@ -76,11 +76,14 @@
   <h2>Who helps us run it</h2>
   <ul>
     <li><strong>Google (Gemini API)</strong> suggests gift ideas — only when someone who received your list
-      taps "Ideas" for a wish. It then receives the wish list text, the occasion, the budget and the giver's
-      optional note — never names or email addresses. We use Google's paid API, so Google does not use this
-      text to train or improve its models.</li>
+      opens the gift ideas. It then receives the wish list text and the occasion, and for picks "just for
+      you" also what that giver chose: the topics, who they are to you (partner, family, friend…), the
+      budget and their optional note — never names or email addresses. We use Google's paid API, so Google
+      does not use this text to train or improve its models.</li>
     <li><strong>Supabase</strong> stores the data listed above (including the gift ideas already given, so the
-      same question isn't sent to the AI twice).</li>
+      same question isn't sent to the AI twice — the shared picks and the ideas per wish are made once and
+      shown to everyone your list went to; picks "just for you" are only shown to whoever asks the same
+      question).</li>
     <li><strong>Resend</strong> delivers the emails.</li>
     <li><strong>Vercel</strong> hosts the website.</li>
     <li><strong>Google Fonts</strong> serves the typefaces, so your browser connects to Google when the page loads.</li>

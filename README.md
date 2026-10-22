@@ -27,17 +27,23 @@ receive it — by email and as a picture they can save on their phone.
    at this step.
 4. The sender opens the link → `GET /api/confirm?token=...` shows a page with a **Send the list**
    button → only the click (`POST`) sends the list to the recipients (every email has an
-   unsubscribe link and two buttons: "Save this list" and "Get gift ideas"), and the submission becomes `sent`.
+   unsubscribe link and two buttons: "Save this list" and "✦ Gift ideas"), and the submission becomes `sent`.
    The link works once and expires after 48 h.
    *Why a button:* security scanners in mail clients (Outlook, corporate filters) open every link
    by themselves, so merely opening a link never sends anything. The same applies to the
    unsubscribe link.
 
-5. **Gift ideas (for givers):** the list email links to the save page (`api/hints.js`), which has a
-   "Not sure what to pick?" section: pick a budget (10–200 €), optionally say what to keep in mind
-   ("for two players"), tap a wish → `POST /api/ideas` → 3 concrete ideas with a typical price, a short
-   reason and a "Search ↗" link. Gemini is called only on that tap; repeated questions come from a cache.
-   Guards: signed link, the wish must be on the list, 10 requests/hour per IP, 30 AI answers per list.
+5. **Gift ideas (for givers):** the list email links to the save page (`api/hints.js`), which has tabs
+   so it never feels like too much at once:
+   - **The list** — the card as a picture, save / send / copy;
+   - **✦ Picks** — 3 picks at three price levels (safe, thoughtful, a surprise not on the list), made
+     **once** by the first visitor and then shown to everyone the list went to;
+   - **For you** — the giver picks focus topics (e.g. only "Sport"), who they are to the person, a budget and
+     optionally what they know ("we run together at weekends") → 3 picks just for them;
+   - **By wish** — tap a wish → 3 ideas for it, made once per wish and shared.
+   Every idea has a typical price, a short reason and a "Search ↗" link. `POST /api/ideas` calls Gemini
+   only when something isn't made yet; everything else comes from the cache.
+   Guards: signed link, wishes/topics must come from the list, 10 AI calls/hour per IP, 30 AI answers per list.
 
 **Fail-safe rule for the whole flow:** if any step fails (validation, storage, blocklist, email),
 nothing is sent to the recipients.
@@ -67,8 +73,8 @@ api/hints.js         → "save these hints" page from the hint email: card as a 
 api/unsubscribe.js   → signed opt-out link → blocklist
 api/feedback.js      → feedback widget → email to the site owner
 api/track.js         → anonymous page views (analytics)
-api/ideas.js         → gift ideas for one wish (guards, cache, per-list cap)
-lib/ideas.js         → the gift-ideas prompt + output cleanup
+api/ideas.js         → gift ideas: shared picks / per wish / for you (guards, cache, per-list cap)
+lib/ideas.js         → the three gift-ideas prompts + output cleanup
 lib/gemini.js        → small Gemini helper (JSON, minimal thinking, model fallback)
 lib/emails.js        → 4 themed templates (Christmas / birthday / Valentine's Day / other) + invite + confirmation email + Resend
 lib/store.js         → Supabase (REQUIRED in this version: without it nothing is sent)
@@ -126,8 +132,10 @@ HANDOVER.md          → handover document for further development (for you and 
    - [ ] unsubscribe link → page with a button → after the click, sending to that email again is refused
    - [ ] list email → "Save this list" → the card shows the wisher's name; save / send / copy work on a phone
    - [ ] the tags (needs:, wants: …) are coloured in the wishes box; the wax seal takes you back to the start
-   - [ ] save page → "Not sure what to pick?" → pick a budget, tap a wish → 3 ideas with prices and "Search ↗";
-         asking the same again answers instantly (cache)
+   - [ ] list email → "✦ Gift ideas" → the save page opens on the Picks tab; the first time it takes a few
+         seconds, after that (and for every other recipient) it is instant
+   - [ ] For you → pick a focus topic, who you are, a budget → 3 picks inside that topic
+   - [ ] By wish → tap a wish → 3 ideas; opening it again (or on another phone) is instant
    - [ ] get flow: the invite arrives and its button opens the page with the right occasion
    - [ ] feedback widget: the message arrives at `FEEDBACK_TO`
    - [ ] "Send the list" 6 times in a row within an hour → a friendly "take a little break" message
